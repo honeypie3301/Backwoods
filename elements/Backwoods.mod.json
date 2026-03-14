@@ -5,6 +5,12 @@
     "biomesInDimension": [
       {
         "value": "CUSTOM:WoodPlains"
+      },
+      {
+        "value": "CUSTOM:DeepBackwoods"
+      },
+      {
+        "value": "CUSTOM:TheThicket"
       }
     ],
     "worldGenType": "Normal world gen",
@@ -24,14 +30,10 @@
     "hasClouds": false,
     "cloudHeight": 192,
     "skyType": "NORMAL",
-    "airColor": {
-      "value": -10927583,
-      "falpha": 0.0
-    },
     "sunHeightAffectsFog": true,
     "canRespawnHere": true,
     "hasFog": true,
-    "ambientLight": 0.0,
+    "ambientLight": 0.007,
     "doesWaterVaporize": false,
     "hasFixedTime": false,
     "fixedTimeValue": 18000,
@@ -45,6 +47,9 @@
     "minMonsterSpawnLightLimit": 0,
     "maxMonsterSpawnLightLimit": 7,
     "monsterSpawnBlockLightLimit": 0,
+    "onPlayerEntersDimension": {
+      "name": "BackwoodsPlayerEntersDimension"
+    },
     "portalFrame": {
       "value": "Blocks.PLANKS#0"
     },
@@ -67,7 +72,7 @@
       }
     ],
     "texture": "flint_and_charcoal",
-    "portalTexture": "backwoods_portal",
+    "portalTexture": "backwoods_portal2",
     "enablePortal": true,
     "portalMakeCondition": {
       "name": "BackwoodsCanMakePortal"

@@ -24,6 +24,8 @@ public class TheBackwoodsModTabs {
 			tabData.accept(TheBackwoodsModItems.BACKWOODS.get());
 		} else if (tabData.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
 			tabData.accept(TheBackwoodsModItems.SPLINTER_SPAWN_EGG.get());
+			tabData.accept(TheBackwoodsModItems.HOLLOW_SPAWN_EGG.get());
+			tabData.accept(TheBackwoodsModItems.LOG_SPLINTER_SPAWN_EGG.get());
 		}
 	}
 }

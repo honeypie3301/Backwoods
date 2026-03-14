@@ -18,6 +18,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.FriendlyByteBuf;
 
+import net.mcreator.thebackwoods.network.TheBackwoodsModVariables;
 import net.mcreator.thebackwoods.init.TheBackwoodsModTabs;
 import net.mcreator.thebackwoods.init.TheBackwoodsModSounds;
 import net.mcreator.thebackwoods.init.TheBackwoodsModItems;
@@ -46,6 +47,7 @@ public class TheBackwoodsMod {
 		TheBackwoodsModItems.REGISTRY.register(modEventBus);
 		TheBackwoodsModEntities.REGISTRY.register(modEventBus);
 		TheBackwoodsModTabs.REGISTRY.register(modEventBus);
+		TheBackwoodsModVariables.ATTACHMENT_TYPES.register(modEventBus);
 		// Start of user code block mod init
 		// End of user code block mod init
 	}

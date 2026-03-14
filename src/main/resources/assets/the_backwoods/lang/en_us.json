@@ -13,5 +13,11 @@
   "subtitles.splinter_step2": "Splinter Step",
   "subtitles.splinter_step3": "Splinter Step",
   "subtitles.splinter_unfreeze1": "Splinter Unfreeze",
-  "subtitles.splinter_attack1": "Splinter attack"
+  "subtitles.splinter_attack1": "Splinter attack",
+  "biome.the_backwoods.deep_backwoods": "Deep Backwoods",
+  "item.the_backwoods.hollow_spawn_egg": "Hollow Spawn Egg",
+  "entity.the_backwoods.hollow": "Hollow",
+  "biome.the_backwoods.the_thicket": "The Thicket",
+  "entity.the_backwoods.log_splinter": "Log Splinter",
+  "item.the_backwoods.log_splinter_spawn_egg": "Log Splinter Spawn Egg"
 }

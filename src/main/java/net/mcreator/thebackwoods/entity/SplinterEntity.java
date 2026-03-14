@@ -31,6 +31,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.registries.BuiltInRegistries;
 
+import net.mcreator.thebackwoods.procedures.SplinterThisEntityKillsAnotherOneProcedure;
 import net.mcreator.thebackwoods.procedures.SplinterOnEntityTickUpdateProcedure;
 import net.mcreator.thebackwoods.init.TheBackwoodsModEntities;
 
@@ -39,6 +40,7 @@ public class SplinterEntity extends Monster {
 	public static final EntityDataAccessor<Integer> DATA_mineX = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
 	public static final EntityDataAccessor<Integer> DATA_mineY = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
 	public static final EntityDataAccessor<Integer> DATA_mineZ = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<Integer> DATA_buildProgress = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
 
 	public SplinterEntity(EntityType<SplinterEntity> type, Level world) {
 		super(type, world);
@@ -53,19 +55,20 @@ public class SplinterEntity extends Monster {
 		builder.define(DATA_mineX, 0);
 		builder.define(DATA_mineY, 0);
 		builder.define(DATA_mineZ, 0);
+		builder.define(DATA_buildProgress, 0);
 	}
 
 	@Override
 	protected void registerGoals() {
 		super.registerGoals();
-		this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.2, true) {
+		this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.3, true) {
 			@Override
 			protected boolean canPerformAttack(LivingEntity entity) {
 				return this.isTimeToAttack() && this.mob.distanceToSqr(entity) < (this.mob.getBbWidth() * this.mob.getBbWidth() + entity.getBbWidth()) && this.mob.getSensing().hasLineOfSight(entity);
 			}
 		});
-		this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, (float) 32));
-		this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Player.class, false, false));
+		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal(this, Player.class, false, false));
+		this.goalSelector.addGoal(3, new LookAtPlayerGoal(this, Player.class, (float) 32));
 	}
 
 	@Override
@@ -85,12 +88,12 @@ public class SplinterEntity extends Monster {
 
 	@Override
 	public SoundEvent getHurtSound(DamageSource ds) {
-		return BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("entity.generic.hurt"));
+		return BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:splinter_step1"));
 	}
 
 	@Override
 	public SoundEvent getDeathSound() {
-		return BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("entity.generic.death"));
+		return BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("intentionally_empty"));
 	}
 
 	@Override
@@ -117,6 +120,7 @@ public class SplinterEntity extends Monster {
 		compound.putInt("DatamineX", this.entityData.get(DATA_mineX));
 		compound.putInt("DatamineY", this.entityData.get(DATA_mineY));
 		compound.putInt("DatamineZ", this.entityData.get(DATA_mineZ));
+		compound.putInt("DatabuildProgress", this.entityData.get(DATA_buildProgress));
 	}
 
 	@Override
@@ -130,6 +134,14 @@ public class SplinterEntity extends Monster {
 			this.entityData.set(DATA_mineY, compound.getInt("DatamineY"));
 		if (compound.contains("DatamineZ"))
 			this.entityData.set(DATA_mineZ, compound.getInt("DatamineZ"));
+		if (compound.contains("DatabuildProgress"))
+			this.entityData.set(DATA_buildProgress, compound.getInt("DatabuildProgress"));
+	}
+
+	@Override
+	public void awardKillScore(Entity entity, int score, DamageSource damageSource) {
+		super.awardKillScore(entity, score, damageSource);
+		SplinterThisEntityKillsAnotherOneProcedure.execute(this.level(), entity);
 	}
 
 	@Override
@@ -166,7 +178,7 @@ public class SplinterEntity extends Monster {
 
 	public static AttributeSupplier.Builder createAttributes() {
 		AttributeSupplier.Builder builder = Mob.createMobAttributes();
-		builder = builder.add(Attributes.MOVEMENT_SPEED, 0.3);
+		builder = builder.add(Attributes.MOVEMENT_SPEED, 0.35);
 		builder = builder.add(Attributes.MAX_HEALTH, 30);
 		builder = builder.add(Attributes.ARMOR, 0);
 		builder = builder.add(Attributes.ATTACK_DAMAGE, 6);

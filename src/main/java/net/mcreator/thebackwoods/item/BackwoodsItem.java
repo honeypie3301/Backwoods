@@ -32,7 +32,7 @@ public class BackwoodsItem extends Item {
 			int y = pos.getY();
 			int z = pos.getZ();
 			boolean success = false;
-			if (world.isEmptyBlock(pos) && BackwoodsCanMakePortalProcedure.execute(entity)) {
+			if (world.isEmptyBlock(pos) && BackwoodsCanMakePortalProcedure.execute(world, entity, itemstack)) {
 				BackwoodsPortalBlock.portalSpawn(world, pos);
 				itemstack.hurtAndBreak(1, entity, LivingEntity.getSlotForHand(context.getHand()));
 				success = true;

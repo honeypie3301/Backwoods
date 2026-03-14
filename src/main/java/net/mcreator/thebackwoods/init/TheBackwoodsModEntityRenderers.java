@@ -9,11 +9,15 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.api.distmarker.Dist;
 
 import net.mcreator.thebackwoods.client.renderer.SplinterRenderer;
+import net.mcreator.thebackwoods.client.renderer.LogSplinterRenderer;
+import net.mcreator.thebackwoods.client.renderer.HollowRenderer;
 
 @EventBusSubscriber(Dist.CLIENT)
 public class TheBackwoodsModEntityRenderers {
 	@SubscribeEvent
 	public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
 		event.registerEntityRenderer(TheBackwoodsModEntities.SPLINTER.get(), SplinterRenderer::new);
+		event.registerEntityRenderer(TheBackwoodsModEntities.HOLLOW.get(), HollowRenderer::new);
+		event.registerEntityRenderer(TheBackwoodsModEntities.LOG_SPLINTER.get(), LogSplinterRenderer::new);
 	}
 }

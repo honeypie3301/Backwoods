@@ -5,7 +5,7 @@
   },
   "spawners": {
     "type": "the_backwoods:splinter",
-    "weight": 20,
+    "weight": 5,
     "minCount": 1,
     "maxCount": 4
   }

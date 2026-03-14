@@ -1,7 +1,7 @@
 {
   "textures": {
-    "particle": "the_backwoods:block/backwoods_portal",
-    "portal": "the_backwoods:block/backwoods_portal"
+    "particle": "the_backwoods:block/backwoods_portal2",
+    "portal": "the_backwoods:block/backwoods_portal2"
   },
   "elements": [
     {

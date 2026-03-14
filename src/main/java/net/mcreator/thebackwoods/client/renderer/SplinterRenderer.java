@@ -17,6 +17,6 @@ public class SplinterRenderer extends HumanoidMobRenderer<SplinterEntity, Humano
 
 	@Override
 	public ResourceLocation getTextureLocation(SplinterEntity entity) {
-		return ResourceLocation.parse("the_backwoods:textures/entities/oakplank-inspired_skin.png");
+		return ResourceLocation.parse("the_backwoods:textures/entities/oak_biped.png");
 	}
 }
