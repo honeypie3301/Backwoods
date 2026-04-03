@@ -41,6 +41,12 @@
     "minMonsterSpawnLightLimit": 0,
     "maxMonsterSpawnLightLimit": 15,
     "monsterSpawnBlockLightLimit": 0,
+    "onPlayerEntersDimension": {
+      "name": "LossPlayerEntersDimension"
+    },
+    "onPlayerLeavesDimension": {
+      "name": "LossPlayerLeavesDimension"
+    },
     "portalFrame": {
       "value": ""
     },

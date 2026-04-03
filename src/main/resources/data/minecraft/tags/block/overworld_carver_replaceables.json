@@ -2,11 +2,15 @@
   "replace": false,
   "values": [
     "minecraft:oak_planks",
+    "minecraft:grass_block",
     "minecraft:spruce_planks",
+    "minecraft:dirt",
     "minecraft:stone",
     "the_backwoods:rotten_oak_wood",
     "the_backwoods:faded_block",
+    "minecraft:sand",
     "minecraft:oak_log",
-    "minecraft:spruce_log"
+    "minecraft:spruce_log",
+    "minecraft:sandstone"
   ]
 }

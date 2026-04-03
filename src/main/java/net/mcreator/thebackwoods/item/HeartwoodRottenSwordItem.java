@@ -16,7 +16,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.network.chat.Component;
 
 import net.mcreator.thebackwoods.procedures.HeartwoodHeartwoodRottenSwordLivingEntityIsHitWithToolProcedure;
-import net.mcreator.thebackwoods.init.TheBackwoodsModBlocks;
+import net.mcreator.thebackwoods.init.TheBackwoodsModItems;
 
 import java.util.List;
 
@@ -49,7 +49,7 @@ public class HeartwoodRottenSwordItem extends SwordItem {
 
 		@Override
 		public Ingredient getRepairIngredient() {
-			return Ingredient.of(new ItemStack(TheBackwoodsModBlocks.ROTTEN_OAK_PLANKS.get()));
+			return Ingredient.of(new ItemStack(TheBackwoodsModItems.HEARTWOOD_SHARD.get()));
 		}
 	};
 

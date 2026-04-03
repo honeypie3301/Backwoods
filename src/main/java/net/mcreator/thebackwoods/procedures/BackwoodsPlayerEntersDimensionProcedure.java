@@ -43,5 +43,6 @@ public class BackwoodsPlayerEntersDimensionProcedure {
 							"fill ~-15 ~-15 ~-15 ~15 ~15 ~15 air replace the_backwoods:backwoods_portal");
 			});
 		}
+		AntiObsidianProcedure.execute(world, entity);
 	}
 }

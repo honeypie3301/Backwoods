@@ -24,9 +24,7 @@ public class HollowEntityIsHurtProcedure {
 				_level.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, x, y, z, 20, 0.5, 2, 0.5, 0.1);
 			if (Math.random() < (1) / ((float) 3)) {
 				if (sourceentity instanceof LivingEntity _entity && !_entity.level().isClientSide())
-					_entity.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 200, 6, false, false));
-				if (sourceentity instanceof LivingEntity _entity && !_entity.level().isClientSide())
-					_entity.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 200, 1, false, false));
+					_entity.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 150, 6, false, false));
 				if (world instanceof Level _level) {
 					if (!_level.isClientSide()) {
 						_level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("ambient.cave")), SoundSource.AMBIENT, 8, (float) 0.5);

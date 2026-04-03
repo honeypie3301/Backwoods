@@ -82,14 +82,12 @@ public class RotOnEntityTickUpdateProcedure {
 					}
 					if ((foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getArmorValue() : 0) >= 16 || foundPlayer instanceof LivingEntity _livEnt19 && _livEnt19.isFallFlying()
 							|| hasEntityInInventory(foundPlayer, new ItemStack(Items.TOTEM_OF_UNDYING)) || (foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == Items.TOTEM_OF_UNDYING
-							|| (foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == Items.DIAMOND_SWORD
+							|| (foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY).getItem() == Items.TOTEM_OF_UNDYING
 							|| (foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == Items.NETHERITE_SWORD
-							|| (foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == Items.NETHERITE_AXE
-							|| (foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == Items.DIAMOND_AXE
-							|| (foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY).getItem() == Items.TOTEM_OF_UNDYING) {
+							|| (foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == Items.NETHERITE_AXE) {
 						if ((foundPlayer.position()).distanceTo((entity.position())) < 5) {
 							if (Mth.nextDouble(RandomSource.create(), 0, 1) < 0.075) {
-								if (foundPlayer instanceof LivingEntity _livEnt37 && _livEnt37.swinging) {
+								if (foundPlayer instanceof LivingEntity _livEnt33 && _livEnt33.swinging) {
 									entity.getPersistentData().putDouble("dodge_x", (entity.getX() + Mth.nextDouble(RandomSource.create(), 1, 3)));
 									entity.getPersistentData().putDouble("dodge_z", (entity.getZ() + Mth.nextDouble(RandomSource.create(), 1, 3)));
 									{
@@ -229,7 +227,7 @@ public class RotOnEntityTickUpdateProcedure {
 								}
 							}
 						}
-						if (foundPlayer instanceof LivingEntity _livEnt164 && _livEnt164.hasEffect(MobEffects.NIGHT_VISION)) {
+						if (foundPlayer instanceof LivingEntity _livEnt160 && _livEnt160.hasEffect(MobEffects.NIGHT_VISION)) {
 							if (Math.random() < (1) / ((float) 70)) {
 								if (foundPlayer instanceof LivingEntity _entity && !_entity.level().isClientSide())
 									_entity.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 1, false, false));
@@ -256,7 +254,7 @@ public class RotOnEntityTickUpdateProcedure {
 					if (foundPlayer.getPersistentData().getDouble("backwoods_time") % 60 != 0) {
 						foundPlayer.getPersistentData().putDouble("backwoods_time", (foundPlayer.getPersistentData().getDouble("backwoods_time") - 0.5));
 					}
-					if (foundPlayer instanceof LivingEntity _livEnt190 && _livEnt190.isFallFlying()) {
+					if (foundPlayer instanceof LivingEntity _livEnt186 && _livEnt186.isFallFlying()) {
 						if (foundPlayer.getPersistentData().getDouble("rot_flight_timer") == 0) {
 							foundPlayer.getPersistentData().putDouble("rot_flight_timer", 35);
 							if (world instanceof Level _level) {

@@ -17,7 +17,7 @@
     },
     "creativeTabs": [
       {
-        "value": "TOOLS"
+        "value": "COMBAT"
       }
     ],
     "efficiency": 4.0,
@@ -30,7 +30,7 @@
     },
     "repairItems": [
       {
-        "value": "CUSTOM:RottenOakPlanks"
+        "value": "CUSTOM:HeartwoodShard"
       }
     ],
     "immuneToFire": false,

@@ -1,7 +1,10 @@
 {
   "replace": false,
   "values": [
+    "the_backwoods:mirrored_desert",
     "the_backwoods:the_thicket",
-    "the_backwoods:wood_plains"
+    "the_backwoods:wood_plains",
+    "the_backwoods:mirrored_jungle",
+    "the_backwoods:mirrored_savannah"
   ]
 }

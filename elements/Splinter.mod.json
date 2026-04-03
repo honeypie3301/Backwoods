@@ -112,7 +112,7 @@
       "value": "CUSTOM:splinter_hurt"
     },
     "deathSound": {
-      "value": "entity.creaking.death"
+      "value": "CUSTOM:splinter_hurt"
     },
     "stepSound": {
       "value": "CUSTOM:splinter_step"

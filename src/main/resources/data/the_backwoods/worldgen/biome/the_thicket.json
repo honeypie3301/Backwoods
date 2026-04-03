@@ -37,7 +37,7 @@
     "monster": [
       {
         "type": "the_backwoods:log_splinter",
-        "weight": 2,
+        "weight": 3,
         "minCount": 1,
         "maxCount": 1
       }
@@ -45,7 +45,7 @@
     "creature": [
       {
         "type": "the_backwoods:ash_weaver",
-        "weight": 1,
+        "weight": 2,
         "minCount": 1,
         "maxCount": 1
       }

@@ -4,7 +4,7 @@ license="GNU General Public License version 3 (GPLv3)"
 
 [[mods]]
 modId="the_backwoods"
-version="1.2.0"
+version="1.3.0"
 displayName="The Backwoods"
 displayURL="https://mcreator.net"
 logoFile="logo.png"
@@ -15,6 +15,8 @@ description="Look away and die."
 # Start of user code block mod configuration
 # End of user code block mod configuration
 
+[[mixins]]
+    config = "the_backwoods.mixins.json"
 
 # Start of user code block custom mixins
 # End of user code block custom mixins

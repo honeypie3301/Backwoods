@@ -38,6 +38,7 @@ public class RottenOakPlanksBlock extends Block {
 	public void appendHoverText(ItemStack itemstack, Item.TooltipContext context, List<Component> list, TooltipFlag flag) {
 		super.appendHoverText(itemstack, context, list, flag);
 		list.add(Component.translatable("block.the_backwoods.rotten_oak_planks.description_0"));
+		list.add(Component.translatable("block.the_backwoods.rotten_oak_planks.description_1"));
 	}
 
 	@Override

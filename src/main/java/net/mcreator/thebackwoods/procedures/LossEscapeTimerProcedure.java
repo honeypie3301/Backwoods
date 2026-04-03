@@ -39,7 +39,7 @@ public class LossEscapeTimerProcedure {
 			return;
 		if ((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:loss"))) {
 			entity.getPersistentData().putDouble("void_time", (entity.getPersistentData().getDouble("void_time") + 1));
-			if (entity.getPersistentData().getDouble("void_time") >= 8000) {
+			if (entity.getPersistentData().getDouble("void_time") >= 7250) {
 				if (entity instanceof ServerPlayer _player && !_player.level().isClientSide()) {
 					ResourceKey<Level> destinationType = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:backwoods"));
 					if (_player.level().dimension() == destinationType)

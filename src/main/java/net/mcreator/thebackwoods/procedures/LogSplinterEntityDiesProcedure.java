@@ -10,7 +10,7 @@ import net.mcreator.thebackwoods.init.TheBackwoodsModBlocks;
 
 public class LogSplinterEntityDiesProcedure {
 	public static void execute(LevelAccessor world, double x, double y, double z) {
-		if (Math.random() < (1) / ((float) 20)) {
+		if (Math.random() < (1) / ((float) 17)) {
 			if (world instanceof ServerLevel _level) {
 				ItemEntity entityToSpawn = new ItemEntity(_level, x, y, z, new ItemStack(TheBackwoodsModItems.SPLINTER_SHARD.get()));
 				entityToSpawn.setPickUpDelay(20);

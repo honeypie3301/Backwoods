@@ -8,6 +8,7 @@ import net.neoforged.bus.api.Event;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.LevelAccessor;
@@ -20,6 +21,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.util.Mth;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.resources.ResourceLocation;
@@ -40,6 +42,37 @@ import java.util.Comparator;
 
 @EventBusSubscriber
 public class SplinterOnEntityTickUpdateProcedure {
+
+	// Higher = must look more directly at Splinter to freeze it, lower = wider freeze cone.
+	private static final double WATCH_DOT_THRESHOLD = 0.5;
+
+	// Splinter base move speed while active.
+	private static final double ACTIVE_MOVE_SPEED = 0.325;
+
+	// Mining formula: threshold = destroySpeed * MINE_SPEED_MULTIPLIER + MINE_SPEED_BASE.
+	// Increase these to make mining slower.
+	private static final float MINE_SPEED_MULTIPLIER = 50f;
+	private static final float MINE_SPEED_BASE = 50f;
+
+	// Blocks with destroy speed >= this are treated as too hard to mine.
+	private static final float MAX_BREAKABLE_HARDNESS = 50f;
+
+	// Splinter must be within this range to evaluate a player target.
+	private static final double TARGET_RANGE = 56;
+
+	// Splinter scan radius around ticking entity.
+	private static final double SPLINTER_SCAN_RADIUS = 28;
+
+	// Forward mining ray distance.
+	private static final double MINE_RAY_DISTANCE = 2.0;
+
+	// Ash Rose item wilt time in ticks.
+	private static final double ROSE_WILT_TICKS = 450;
+
+	// Nearby Ash Rose block scan box around Splinter.
+	private static final int ROSE_SCAN_XZ = 6;
+	private static final int ROSE_SCAN_Y = 3;
+
 	@SubscribeEvent
 	public static void onEntityTick(EntityTickEvent.Pre event) {
 		execute(event, event.getEntity().level(), event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getEntity());
@@ -52,217 +85,199 @@ public class SplinterOnEntityTickUpdateProcedure {
 	private static void execute(@Nullable Event event, LevelAccessor world, double x, double y, double z, Entity entity) {
 		if (entity == null)
 			return;
-		Entity foundPlayer = null;
-		boolean isWatched = false;
-		boolean found = false;
-		double dot = 0;
-		double sx = 0;
-		double sy = 0;
-		double sz = 0;
-		{
-			final Vec3 _center = new Vec3(x, y, z);
-			for (Entity entityiterator : world.getEntitiesOfClass(Entity.class, new AABB(_center, _center).inflate(56 / 2d), e -> true).stream().sorted(Comparator.comparingDouble(_entcnd -> _entcnd.distanceToSqr(_center))).toList()) {
-				if (entityiterator instanceof SplinterEntity) {
-					isWatched = false;
-					foundPlayer = findEntityInWorldRange(world, Player.class, x, y, z, 56);
-					if (!(foundPlayer == null)) {
-						dot = foundPlayer.getLookAngle().x * (foundPlayer.getX() - entityiterator.getX()) + foundPlayer.getLookAngle().z * (foundPlayer.getZ() - entityiterator.getZ());
-						if (dot < 0) {
-							isWatched = true;
-						} else {
-							isWatched = false;
+		if (!(entity instanceof SplinterEntity))
+        		return;
+
+		final Vec3 center = new Vec3(x, y, z);
+
+		for (SplinterEntity splinter : world.getEntitiesOfClass(SplinterEntity.class, new AABB(center, center).inflate(SPLINTER_SCAN_RADIUS), e -> true)
+				.stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(center))).toList()) {
+
+			Player foundPlayer = (Player) findEntityInWorldRange(world, Player.class, splinter.getX(), splinter.getY(), splinter.getZ(), TARGET_RANGE);
+			if (foundPlayer == null)
+				continue;
+
+			int frozenByRose = splinter.getEntityData().get(SplinterEntity.DATA_frozenByRose);
+
+			Vec3 toSplinter = splinter.getEyePosition().subtract(foundPlayer.getEyePosition()).normalize();
+			double dot = foundPlayer.getLookAngle().normalize().dot(toSplinter);
+			boolean facing = dot > WATCH_DOT_THRESHOLD;
+			boolean canSee = foundPlayer.hasLineOfSight(splinter); // clear line of sight
+			boolean isWatched = facing && canSee;
+
+			if (isWatched || frozenByRose == 1) {
+				setSpeed(splinter, 0);
+				if (splinter instanceof Mob mob) {
+					mob.getNavigation().stop();
+				}
+				continue;
+			}
+
+			splinter.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(foundPlayer.getX(), foundPlayer.getEyeY(), foundPlayer.getZ()));
+			setSpeed(splinter, ACTIVE_MOVE_SPEED);
+
+			Vec3 splinterEyes = splinter.getEyePosition(1f);
+			Vec3 splinterView = splinter.getViewVector(1f);
+			Vec3 blockCheckTarget = splinterEyes.add(splinterView.scale(MINE_RAY_DISTANCE));
+
+			HitResult hit = world.clip(new ClipContext(splinterEyes, blockCheckTarget, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, splinter));
+
+			if (hit.getType() == HitResult.Type.BLOCK) {
+				BlockPos facePos = ((BlockHitResult) hit).getBlockPos();
+				BlockPos feetPos = new BlockPos(facePos.getX(), Mth.floor(splinter.getY()), facePos.getZ());
+
+				boolean canMineFeet = canMine(world, feetPos, foundPlayer);
+				boolean canMineFace = canMine(world, facePos, foundPlayer);
+
+				if (canMineFeet || canMineFace) {
+					int mineProgress = splinter.getEntityData().get(SplinterEntity.DATA_mineProgress) + 1;
+					splinter.getEntityData().set(SplinterEntity.DATA_mineProgress, mineProgress);
+
+					BlockPos trackPos = canMineFeet ? feetPos : facePos;
+					splinter.getEntityData().set(SplinterEntity.DATA_mineX, trackPos.getX());
+					splinter.getEntityData().set(SplinterEntity.DATA_mineY, trackPos.getY());
+					splinter.getEntityData().set(SplinterEntity.DATA_mineZ, trackPos.getZ());
+
+					float speedRef = canMineFeet ? world.getBlockState(feetPos).getDestroySpeed(world, feetPos) : world.getBlockState(facePos).getDestroySpeed(world, facePos);
+					float mineThreshold = speedRef * MINE_SPEED_MULTIPLIER + MINE_SPEED_BASE;
+
+					if (mineProgress > mineThreshold) {
+						if (canMineFeet) {
+							world.destroyBlock(feetPos, false);
+							if (world instanceof Level level) {
+								level.updateNeighborsAt(feetPos, level.getBlockState(feetPos).getBlock());
+							}
 						}
-						if (isWatched == true) {
-							if (entityiterator instanceof LivingEntity _livingEntity9 && _livingEntity9.getAttributes().hasAttribute(Attributes.MOVEMENT_SPEED))
-								_livingEntity9.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0);
-							if ((entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_frozenByRose) : 0) == 1) {
-								if (entityiterator instanceof LivingEntity _livingEntity11 && _livingEntity11.getAttributes().hasAttribute(Attributes.MOVEMENT_SPEED))
-									_livingEntity11.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0);
-								entityiterator.setDeltaMovement(new Vec3(0, 0, 0));
+						if (canMineFace) {
+							world.destroyBlock(facePos, false);
+							if (world instanceof Level level) {
+								level.updateNeighborsAt(facePos, level.getBlockState(facePos).getBlock());
 							}
-						} else if (isWatched == false && (entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_frozenByRose) : 0) == 0) {
-							entityiterator.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3((foundPlayer.getX()), (foundPlayer.getY()), (foundPlayer.getZ())));
-							if (entityiterator instanceof LivingEntity _livingEntity18 && _livingEntity18.getAttributes().hasAttribute(Attributes.MOVEMENT_SPEED))
-								_livingEntity18.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.35);
-							if (entityiterator.level()
-									.clip(new ClipContext(entityiterator.getEyePosition(1f), entityiterator.getEyePosition(1f).add(entityiterator.getViewVector(1f).scale(2)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entityiterator))
-									.getType() == HitResult.Type.BLOCK) {
-								if (entityiterator instanceof SplinterEntity _datEntSetI)
-									_datEntSetI.getEntityData().set(SplinterEntity.DATA_mineProgress, (int) ((entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineProgress) : 0) + 1));
-								if (entityiterator instanceof SplinterEntity _datEntSetI)
-									_datEntSetI.getEntityData().set(SplinterEntity.DATA_mineX, entityiterator.level().clip(
-											new ClipContext(entityiterator.getEyePosition(1f), entityiterator.getEyePosition(1f).add(entityiterator.getViewVector(1f).scale(2)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entityiterator))
-											.getBlockPos().getX());
-								if (entityiterator instanceof SplinterEntity _datEntSetI)
-									_datEntSetI.getEntityData().set(SplinterEntity.DATA_mineY, entityiterator.level().clip(
-											new ClipContext(entityiterator.getEyePosition(1f), entityiterator.getEyePosition(1f).add(entityiterator.getViewVector(1f).scale(2)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entityiterator))
-											.getBlockPos().getY());
-								if (entityiterator instanceof SplinterEntity _datEntSetI)
-									_datEntSetI.getEntityData().set(SplinterEntity.DATA_mineZ, entityiterator.level().clip(
-											new ClipContext(entityiterator.getEyePosition(1f), entityiterator.getEyePosition(1f).add(entityiterator.getViewVector(1f).scale(2)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entityiterator))
-											.getBlockPos().getZ());
-								if ((entityiterator instanceof SplinterEntity _datEntI
-										? _datEntI.getEntityData().get(SplinterEntity.DATA_mineProgress)
-										: 0) > world
-												.getBlockState(BlockPos.containing(entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineX) : 0,
-														entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineY) : 0,
-														entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineZ) : 0))
-												.getDestroySpeed(world,
-														BlockPos.containing(entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineX) : 0,
-																entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineY) : 0,
-																entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineZ) : 0))
-												* 40 + 40) {
-									if (world
-											.getBlockState(BlockPos.containing(entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineX) : 0,
-													entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineY) : 0,
-													entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineZ) : 0))
-											.getDestroySpeed(world,
-													BlockPos.containing(entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineX) : 0,
-															entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineY) : 0,
-															entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineZ) : 0)) >= 0
-											&& !((entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineY) : 0) == foundPlayer.getY() - 2)
-											&& world.getBlockState(BlockPos.containing(entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineX) : 0,
-													entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineY) : 0,
-													entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineZ) : 0))
-													.getDestroySpeed(world,
-															BlockPos.containing(entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineX) : 0,
-																	entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineY) : 0,
-																	entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineZ) : 0)) < 50) {
-										world.destroyBlock(BlockPos.containing(entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineX) : 0,
-												entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineY) : 0,
-												entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineZ) : 0), false);
-										if (world instanceof Level _level)
-											_level.updateNeighborsAt(
-													BlockPos.containing(entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineX) : 0,
-															entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineY) : 0,
-															entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineZ) : 0),
-													_level.getBlockState(BlockPos.containing(entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineX) : 0,
-															entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineY) : 0,
-															entityiterator instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_mineZ) : 0)).getBlock());
-										if (entityiterator instanceof Mob _entity)
-											_entity.getNavigation().stop();
-										if (entityiterator instanceof SplinterEntity _datEntSetI)
-											_datEntSetI.getEntityData().set(SplinterEntity.DATA_mineProgress, 0);
-									}
-								}
-							} else {
-								if (entityiterator instanceof SplinterEntity _datEntSetI)
-									_datEntSetI.getEntityData().set(SplinterEntity.DATA_mineProgress, 0);
-								if (foundPlayer.getY() - entityiterator.getY() >= 1.4 && (entityiterator.position()).distanceTo((foundPlayer.position())) < 12) {
-									if (world instanceof ServerLevel _level)
-										_level.getServer().getCommands().performPrefixedCommand(
-												new CommandSourceStack(CommandSource.NULL, new Vec3((entityiterator.getX()), (entityiterator.getY()), (entityiterator.getZ())), Vec2.ZERO, _level, 4, "", Component.literal(""), _level.getServer(), null)
-														.withSuppressedOutput(),
-												"fill ~ ~-1 ~ ~ ~-1 ~ minecraft:oak_planks replace minecraft:air");
-									if (world instanceof ServerLevel _level)
-										_level.getServer().getCommands().performPrefixedCommand(
-												new CommandSourceStack(CommandSource.NULL, new Vec3((entityiterator.getX()), (entityiterator.getY()), (entityiterator.getZ())), Vec2.ZERO, _level, 4, "", Component.literal(""), _level.getServer(), null)
-														.withSuppressedOutput(),
-												"fill ~ ~ ~ ~ ~1 ~ minecraft:air replace minecraft:oak_planks");
-									world.destroyBlock(BlockPos.containing(entityiterator.getX(), entityiterator.getY() + 2, entityiterator.getZ()), false);
-									world.destroyBlock(BlockPos.containing(entityiterator.getX(), entityiterator.getY() + 3, entityiterator.getZ()), false);
-									if (entityiterator.onGround()) {
-										entityiterator.setDeltaMovement(new Vec3((entityiterator.getDeltaMovement().x()), 0.4, (entityiterator.getDeltaMovement().z())));
-									}
-									entityiterator.fallDistance = 0;
-								} else {
-									if (((foundPlayer.getY() - entityiterator.getY())) > ((-0.5)) && ((foundPlayer.getY() - entityiterator.getY())) < (2.5)) {
-										if (!(world.getBlockFloorHeight(BlockPos.containing(entityiterator.getX() + entityiterator.getLookAngle().x * 1, entityiterator.getY() - 1, entityiterator.getZ() + entityiterator.getLookAngle().z * 1)) > 0)) {
-											world.setBlock(BlockPos.containing(entityiterator.getX() + entityiterator.getLookAngle().x * 1, entityiterator.getY() - 1, entityiterator.getZ() + entityiterator.getLookAngle().z * 1),
-													Blocks.OAK_PLANKS.defaultBlockState(), 3);
-										}
-									}
-								}
-							}
-							found = false;
-							if ((entity instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem()
-									|| (entity instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY).getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem()) {
-								found = true;
-								entityiterator.setDeltaMovement(new Vec3(0, 0, 0));
-								if (entityiterator instanceof LivingEntity _livingEntity100 && _livingEntity100.getAttributes().hasAttribute(Attributes.MOVEMENT_SPEED))
-									_livingEntity100.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0);
-								if ((entity instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem()) {
-									{
-										final String _tagName = "wilt_timer";
-										final double _tagValue = ((entity instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getDouble("wilt_timer")
-												+ 1);
-										CustomData.update(DataComponents.CUSTOM_DATA, (entity instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY), tag -> tag.putDouble(_tagName, _tagValue));
-									}
-									if ((entity instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getDouble("wilt_timer") > 450) {
-										if (world instanceof Level _level) {
-											if (!_level.isClientSide()) {
-												_level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1, 1);
-											} else {
-												_level.playLocalSound(x, y, z, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1, 1, false);
-											}
-										}
-										(entity instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).shrink(1);
-										{
-											final String _tagName = "wilt_timer";
-											final double _tagValue = 0;
-											CustomData.update(DataComponents.CUSTOM_DATA, (entity instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY), tag -> tag.putDouble(_tagName, _tagValue));
-										}
-									}
-								}
-								if ((entity instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY).getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem()) {
-									{
-										final String _tagName = "wilt_timer";
-										final double _tagValue = ((entity instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY).getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getDouble("wilt_timer") + 1);
-										CustomData.update(DataComponents.CUSTOM_DATA, (entity instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY), tag -> tag.putDouble(_tagName, _tagValue));
-									}
-									if ((entity instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY).getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getDouble("wilt_timer") > 450) {
-										if (world instanceof Level _level) {
-											if (!_level.isClientSide()) {
-												_level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1, 1);
-											} else {
-												_level.playLocalSound(x, y, z, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1, 1, false);
-											}
-										}
-										(entity instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY).shrink(1);
-										{
-											final String _tagName = "wilt_timer";
-											final double _tagValue = 0;
-											CustomData.update(DataComponents.CUSTOM_DATA, (entity instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY), tag -> tag.putDouble(_tagName, _tagValue));
-										}
-									}
-								}
-							}
-							if (Math.random() < 0.05) {
-								sx = -6;
-								for (int index0 = 0; index0 < 12; index0++) {
-									sy = -3;
-									for (int index1 = 0; index1 < 6; index1++) {
-										sz = -6;
-										for (int index2 = 0; index2 < 12; index2++) {
-											if (found == false) {
-												if ((world.getBlockState(BlockPos.containing(entityiterator.getX() + sx, entityiterator.getY() + sy, entityiterator.getZ() + sz))).getBlock() == TheBackwoodsModBlocks.ASH_ROSE.get()) {
-													found = true;
-												}
-											}
-											sz = sz + 1;
-										}
-										sy = sy + 1;
-									}
-									sx = sx + 1;
-								}
-								if (found == true) {
-									if (entityiterator instanceof LivingEntity _livingEntity132 && _livingEntity132.getAttributes().hasAttribute(Attributes.MOVEMENT_SPEED))
-										_livingEntity132.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0);
-									entityiterator.setDeltaMovement(new Vec3(0, 0, 0));
-								}
-							}
-						} else if (found == true) {
-							if (entityiterator instanceof LivingEntity _livingEntity134 && _livingEntity134.getAttributes().hasAttribute(Attributes.MOVEMENT_SPEED))
-								_livingEntity134.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0);
-							entityiterator.setDeltaMovement(new Vec3(0, 0, 0));
 						}
+						if (splinter instanceof Mob mob) {
+							mob.getNavigation().stop();
+						}
+						splinter.getEntityData().set(SplinterEntity.DATA_mineProgress, 0);
 					}
+				} else {
+					splinter.getEntityData().set(SplinterEntity.DATA_mineProgress, 0);
+				}
+			} else {
+				splinter.getEntityData().set(SplinterEntity.DATA_mineProgress, 0);
+
+				double heightDiff = foundPlayer.getY() - splinter.getY();
+				double horizontalDist = splinter.position().distanceTo(foundPlayer.position());
+
+				if (heightDiff >= 1.4 && horizontalDist < 12) {
+					if (world instanceof ServerLevel serverLevel) {
+						CommandSourceStack src = new CommandSourceStack(CommandSource.NULL, new Vec3(splinter.getX(), splinter.getY(), splinter.getZ()), Vec2.ZERO, serverLevel, 4, "", Component.literal(""), serverLevel.getServer(), null).withSuppressedOutput();
+						serverLevel.getServer().getCommands().performPrefixedCommand(src, "fill ~ ~-1 ~ ~ ~-1 ~ minecraft:oak_planks replace minecraft:air");
+						serverLevel.getServer().getCommands().performPrefixedCommand(src, "fill ~ ~ ~ ~ ~1 ~ minecraft:air replace minecraft:oak_planks");
+					}
+					world.destroyBlock(BlockPos.containing(splinter.getX(), splinter.getY() + 2, splinter.getZ()), false);
+					world.destroyBlock(BlockPos.containing(splinter.getX(), splinter.getY() + 3, splinter.getZ()), false);
+					if (splinter.onGround()) {
+						splinter.setDeltaMovement(new Vec3(splinter.getDeltaMovement().x(), 0.4, splinter.getDeltaMovement().z()));
+					}
+					splinter.fallDistance = 0;
+				} else if (heightDiff > -0.5 && heightDiff < 2.5) {
+					Vec3 look = splinter.getLookAngle();
+					BlockPos bridgePos = BlockPos.containing(splinter.getX() + look.x, splinter.getY() - 1, splinter.getZ() + look.z);
+					if (!(world.getBlockFloorHeight(bridgePos) > 0)) {
+						world.setBlock(bridgePos, Blocks.OAK_PLANKS.defaultBlockState(), 3);
+					}
+				}
+			}
+
+			boolean foundRose = checkHeldRose(foundPlayer, splinter, world, foundPlayer.getX(), foundPlayer.getY(), foundPlayer.getZ());
+
+			if (!foundRose && splinter.tickCount % 5 == 0) {
+				foundRose = checkNearbyRoseBlocks(world, splinter);
+			}
+
+			if (foundRose) {
+				setSpeed(splinter, 0);
+				if (splinter instanceof Mob mob) {
+					mob.getNavigation().stop();
 				}
 			}
 		}
 	}
 
+	private static void setSpeed(LivingEntity entity, double speed) {
+		if (entity.getAttributes().hasAttribute(Attributes.MOVEMENT_SPEED)) {
+			entity.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(speed);
+		}
+	}
+
+	private static boolean canMine(LevelAccessor world, BlockPos pos, Player player) {
+		float speed = world.getBlockState(pos).getDestroySpeed(world, pos);
+		if (speed < 0 || speed >= MAX_BREAKABLE_HARDNESS)
+			return false;
+		if (pos.getY() == (int) (player.getY() - 2))
+			return false;
+		return !world.getBlockState(pos).isAir();
+	}
+
+	private static boolean checkHeldRose(Entity holder, SplinterEntity splinter, LevelAccessor world, double x, double y, double z) {
+		if (!(holder instanceof LivingEntity living))
+			return false;
+
+		ItemStack main = living.getMainHandItem();
+		ItemStack off = living.getOffhandItem();
+
+		boolean mainIsRose = main.getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem();
+		boolean offIsRose = off.getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem();
+
+		if (!mainIsRose && !offIsRose)
+			return false;
+
+		setSpeed(splinter, 0);
+		if (splinter instanceof Mob mob) {
+			mob.getNavigation().stop();
+		}
+
+		if (mainIsRose)
+			tickRoseItem(main, world, x, y, z);
+		if (offIsRose)
+			tickRoseItem(off, world, x, y, z);
+
+		return true;
+	}
+
+	private static void tickRoseItem(ItemStack rose, LevelAccessor world, double x, double y, double z) {
+		double wiltTimer = rose.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getDouble("wilt_timer") + 1;
+		CustomData.update(DataComponents.CUSTOM_DATA, rose, tag -> tag.putDouble("wilt_timer", wiltTimer));
+
+		if (wiltTimer > ROSE_WILT_TICKS) {
+			if (world instanceof Level level) {
+				if (!level.isClientSide()) {
+					level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1, 1);
+				} else {
+					level.playLocalSound(x, y, z, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1, 1, false);
+				}
+			}
+			rose.shrink(1);
+			CustomData.update(DataComponents.CUSTOM_DATA, rose, tag -> tag.putDouble("wilt_timer", 0));
+		}
+	}
+
+	private static boolean checkNearbyRoseBlocks(LevelAccessor world, SplinterEntity splinter) {
+		for (int sx = -ROSE_SCAN_XZ; sx < ROSE_SCAN_XZ; sx++) {
+			for (int sy = -ROSE_SCAN_Y; sy < ROSE_SCAN_Y; sy++) {
+				for (int sz = -ROSE_SCAN_XZ; sz < ROSE_SCAN_XZ; sz++) {
+					BlockPos check = BlockPos.containing(splinter.getX() + sx, splinter.getY() + sy, splinter.getZ() + sz);
+					if (world.getBlockState(check).getBlock() == TheBackwoodsModBlocks.ASH_ROSE.get()) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
 	private static Entity findEntityInWorldRange(LevelAccessor world, Class<? extends Entity> clazz, double x, double y, double z, double range) {
-		return (Entity) world.getEntitiesOfClass(clazz, AABB.ofSize(new Vec3(x, y, z), range, range, range), e -> true).stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(x, y, z))).findFirst().orElse(null);
+		return world.getEntitiesOfClass(clazz, AABB.ofSize(new Vec3(x, y, z), range, range, range), e -> true)
+				.stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(x, y, z))).findFirst().orElse(null);
 	}
 }

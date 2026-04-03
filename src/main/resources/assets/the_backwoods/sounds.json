@@ -49,19 +49,6 @@
       }
     ]
   },
-  "degradation": {
-    "subtitle": "subtitles.degradation",
-    "sounds": [
-      {
-        "name": "the_backwoods:r1_stage6",
-        "stream": false
-      },
-      {
-        "name": "the_backwoods:o1_stage6",
-        "stream": false
-      }
-    ]
-  },
   "rot_step": {
     "subtitle": "subtitles.rot_step",
     "sounds": [
@@ -234,6 +221,82 @@
       },
       {
         "name": "the_backwoods:rotten_step6",
+        "stream": false
+      }
+    ]
+  },
+  "degradation": {
+    "subtitle": "subtitles.degradation",
+    "sounds": [
+      {
+        "name": "the_backwoods:o1_stage6",
+        "stream": false
+      },
+      {
+        "name": "the_backwoods:r1_stage6",
+        "stream": false
+      }
+    ]
+  },
+  "still_music": {
+    "subtitle": "subtitles.still_music",
+    "sounds": [
+      {
+        "name": "the_backwoods:floating-in-the-midnight-breeze",
+        "stream": false
+      }
+    ]
+  },
+  "still_mood": {
+    "subtitle": "subtitles.still_mood",
+    "sounds": [
+      {
+        "name": "the_backwoods:254750__hermanschmidt__2-5-8-3-3-8-5-4-composition-4",
+        "stream": false
+      }
+    ]
+  },
+  "still_music2": {
+    "subtitle": "subtitles.still_music2",
+    "sounds": [
+      {
+        "name": "the_backwoods:speedenza__found-in-space-17",
+        "stream": false
+      }
+    ]
+  },
+  "still_mood2": {
+    "subtitle": "subtitles.still_mood2",
+    "sounds": [
+      {
+        "name": "the_backwoods:composingatnight__minor-arpeggio-synth",
+        "stream": false
+      }
+    ]
+  },
+  "still_mood3": {
+    "subtitle": "subtitles.still_mood3",
+    "sounds": [
+      {
+        "name": "the_backwoods:robzye__ahrendees__mally_and_sculder-1min23-robzye",
+        "stream": false
+      }
+    ]
+  },
+  "still_ambient": {
+    "subtitle": "subtitles.still_ambient",
+    "sounds": [
+      {
+        "name": "the_backwoods:zagi2__timid-bone-scary-lyly-pop",
+        "stream": false
+      }
+    ]
+  },
+  "still_ambient2": {
+    "subtitle": "subtitles.still_ambient2",
+    "sounds": [
+      {
+        "name": "the_backwoods:746130__klankbeeld__room-tone-empty-aparment-hot-summer-907-am-220813_0498",
         "stream": false
       }
     ]

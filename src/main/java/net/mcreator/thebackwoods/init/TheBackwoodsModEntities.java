@@ -34,7 +34,7 @@ public class TheBackwoodsModEntities {
 	public static final DeferredHolder<EntityType<?>, EntityType<LogSplinterEntity>> LOG_SPLINTER = register("log_splinter",
 			EntityType.Builder.<LogSplinterEntity>of(LogSplinterEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune().ridingOffset(-0.6f).sized(0.6f, 1.8f));
 	public static final DeferredHolder<EntityType<?>, EntityType<AshWeaverEntity>> ASH_WEAVER = register("ash_weaver",
-			EntityType.Builder.<AshWeaverEntity>of(AshWeaverEntity::new, MobCategory.CREATURE).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3)
+			EntityType.Builder.<AshWeaverEntity>of(AshWeaverEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3)
 
 					.ridingOffset(-0.6f).sized(0.6f, 1.8f));
 	public static final DeferredHolder<EntityType<?>, EntityType<RotEntity>> ROT = register("rot",

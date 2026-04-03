@@ -23,8 +23,6 @@ public class TheBackwoodsModTabs {
 		if (tabData.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
 			tabData.accept(TheBackwoodsModItems.BACKWOODS.get());
 			tabData.accept(TheBackwoodsModItems.ROTTEN_STICK.get());
-			tabData.accept(TheBackwoodsModItems.ROTTEN_SWORD.get());
-			tabData.accept(TheBackwoodsModItems.HEARTWOOD_ROTTEN_SWORD.get());
 			tabData.accept(TheBackwoodsModItems.ROTTEN_AXE.get());
 			tabData.accept(TheBackwoodsModItems.ROTTEN_PICKAXE.get());
 			tabData.accept(TheBackwoodsModItems.ROTTEN_SHOVEL.get());
@@ -49,12 +47,23 @@ public class TheBackwoodsModTabs {
 			tabData.accept(TheBackwoodsModBlocks.ROTTEN_OAK_SLAB.get().asItem());
 			tabData.accept(TheBackwoodsModBlocks.ROTTEN_OAK_FENCE.get().asItem());
 			tabData.accept(TheBackwoodsModBlocks.ROTTEN_OAK_TRAPDOOR.get().asItem());
+			tabData.accept(TheBackwoodsModBlocks.ROTTEN_OAK_BUTTON.get().asItem());
+			tabData.accept(TheBackwoodsModBlocks.ROTTEN_OAK_GATE.get().asItem());
+			tabData.accept(TheBackwoodsModBlocks.ROTTEN_OAK_PRESSURE_PLATE.get().asItem());
+			tabData.accept(TheBackwoodsModBlocks.PETRIFIED_ROTTEN_OAK_WOOD.get().asItem());
 		} else if (tabData.getTabKey() == CreativeModeTabs.INGREDIENTS) {
 			tabData.accept(TheBackwoodsModItems.SEEP.get());
 			tabData.accept(TheBackwoodsModItems.ROTTEN_STICK.get());
 			tabData.accept(TheBackwoodsModItems.SPLINTER_SHARD.get());
 		} else if (tabData.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS) {
 			tabData.accept(TheBackwoodsModItems.PALE_REMEDY.get());
+			tabData.accept(TheBackwoodsModItems.PALE_DRAUGHT_BOTTLE.get());
+		} else if (tabData.getTabKey() == CreativeModeTabs.COMBAT) {
+			tabData.accept(TheBackwoodsModItems.ROTTEN_SWORD.get());
+			tabData.accept(TheBackwoodsModItems.HEARTWOOD_ROTTEN_SWORD.get());
+			tabData.accept(TheBackwoodsModItems.ROTTEN_AXE.get());
+		} else if (tabData.getTabKey() == CreativeModeTabs.REDSTONE_BLOCKS) {
+			tabData.accept(TheBackwoodsModBlocks.ROTTEN_OAK_PRESSURE_PLATE.get().asItem());
 		}
 	}
 }

@@ -17,6 +17,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.core.BlockPos;
 
 import net.mcreator.thebackwoods.init.TheBackwoodsModItems;
+import net.mcreator.thebackwoods.init.TheBackwoodsModBlocks;
 
 import javax.annotation.Nullable;
 
@@ -34,8 +35,9 @@ public class OakPlankDropProcedure {
 	private static void execute(@Nullable Event event, LevelAccessor world, double x, double y, double z, Entity entity) {
 		if (entity == null)
 			return;
-		if ((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:backwoods"))) {
-			if ((world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == Blocks.OAK_PLANKS) {
+		if ((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:backwoods"))
+				|| (entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:the_still"))) {
+			if ((world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == Blocks.OAK_PLANKS || (world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == TheBackwoodsModBlocks.ROTTEN_OAK_WOOD.get()) {
 				if (Math.random() < (1) / ((float) 50)) {
 					if (world instanceof ServerLevel _level) {
 						ItemEntity entityToSpawn = new ItemEntity(_level, x, y, z, new ItemStack(TheBackwoodsModItems.SEEP.get()));

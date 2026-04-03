@@ -9,7 +9,7 @@ import net.mcreator.thebackwoods.init.TheBackwoodsModItems;
 
 public class RottenOakLogBlockDestroyedByPlayerProcedure {
 	public static void execute(LevelAccessor world, double x, double y, double z) {
-		if (Math.random() < (1) / ((float) 35)) {
+		if (Math.random() < (1) / ((float) 30)) {
 			if (world instanceof ServerLevel _level) {
 				ItemEntity entityToSpawn = new ItemEntity(_level, x, y, z, new ItemStack(TheBackwoodsModItems.HEARTWOOD_SHARD.get()));
 				entityToSpawn.setPickUpDelay(20);

@@ -1,9 +1,15 @@
 package net.mcreator.thebackwoods.procedures;
 
+import net.neoforged.neoforge.items.ItemHandlerHelper;
+
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,6 +20,7 @@ import net.minecraft.network.protocol.game.ClientboundUpdateMobEffectPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket;
 import net.minecraft.network.protocol.game.ClientboundLevelEventPacket;
 import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
+import net.minecraft.network.chat.Component;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.BlockPos;
@@ -27,14 +34,16 @@ public class RotEffigyRightclickedProcedure {
 		if ((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:rotting"))) {
 			if (world instanceof Level _level) {
 				if (!_level.isClientSide()) {
-					_level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("ambient.crimson_forest.mood")), SoundSource.MASTER, 2, (float) 0.7);
+					_level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("ambient.crimson_forest.mood")), SoundSource.MASTER, 3, 1);
 				} else {
-					_level.playLocalSound(x, y, z, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("ambient.crimson_forest.mood")), SoundSource.MASTER, 2, (float) 0.7, false);
+					_level.playLocalSound(x, y, z, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("ambient.crimson_forest.mood")), SoundSource.MASTER, 3, 1, false);
 				}
 			}
+			if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
+				_entity.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 60, 5, false, false));
 			TheBackwoodsMod.queueServerWork(60, () -> {
 				if (entity instanceof ServerPlayer _player && !_player.level().isClientSide()) {
-					ResourceKey<Level> destinationType = Level.OVERWORLD;
+					ResourceKey<Level> destinationType = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:the_still"));
 					if (_player.level().dimension() == destinationType)
 						return;
 					ServerLevel nextLevel = _player.server.getLevel(destinationType);
@@ -47,8 +56,31 @@ public class RotEffigyRightclickedProcedure {
 						_player.connection.send(new ClientboundLevelEventPacket(1032, BlockPos.ZERO, 0, false));
 					}
 				}
+				{
+					Entity _ent = entity;
+					_ent.teleportTo(x, 129, z);
+					if (_ent instanceof ServerPlayer _serverPlayer)
+						_serverPlayer.connection.teleport(x, 129, z, _ent.getYRot(), _ent.getXRot());
+				}
+				if (entity instanceof Player _player) {
+					ItemStack _setstack = new ItemStack(Items.GLASS_BOTTLE).copy();
+					_setstack.setCount(1);
+					ItemHandlerHelper.giveItemToPlayer(_player, _setstack);
+				}
 			});
 			itemstack.shrink(1);
+		} else if (!((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:rotting")))) {
+			if (world instanceof Level _level) {
+				if (!_level.isClientSide()) {
+					_level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("ambient.basalt_deltas.mood")), SoundSource.MASTER, 2, 1);
+				} else {
+					_level.playLocalSound(x, y, z, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("ambient.basalt_deltas.mood")), SoundSource.MASTER, 2, 1, false);
+				}
+			}
+			if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
+				_entity.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 60, 2, false, false));
+			if (entity instanceof Player _player && !_player.level().isClientSide())
+				_player.displayClientMessage(Component.literal("It won't work."), true);
 		}
 	}
 }
