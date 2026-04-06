@@ -26,40 +26,22 @@ import net.mcreator.thebackwoods.entity.HollowEntity;
 import javax.annotation.Nullable;
 
 import java.util.Comparator;
+import java.util.List;
 
 @EventBusSubscriber
 public class AshWeaverOnEntityTickUpdateProcedure {
 
-	// Player target scan range for movement and rose placement.
 	private static final double PLAYER_RANGE = 32.0;
-
-	// Threat scan range (Splinter, Log Splinter, Hollow) required to allow rose placement.
 	private static final double THREAT_RANGE = 32.0;
-
-	// Ash Weaver follows player until within this distance.
 	private static final double STOP_DISTANCE = 3.0;
-
-	// Ash Weaver navigation speed toward player.
 	private static final double MOVE_SPEED = 1.45;
-
-	// Max real Ash Rose blocks allowed near the target player before placement is blocked.
 	private static final int MAX_NEARBY_ROSES = 3;
-
-	// Radius around player to count existing Ash Roses.
 	private static final int ROSE_COUNT_RADIUS_XZ = 8;
 	private static final int ROSE_COUNT_RADIUS_Y = 3;
-
-	// Placement random offset from player.
 	private static final int PLACE_OFFSET_MIN = -3;
 	private static final int PLACE_OFFSET_MAX = 3;
-
-	// Minimum spacing from other Ash Roses for new placement.
 	private static final int MIN_ROSE_SPACING = 2;
-
-	// Chance per tick to attempt placement when eligible.
 	private static final double PLACE_CHANCE_PER_TICK = 1.0 / 140.0;
-
-	// Cooldown after successful placement.
 	private static final int PLACE_COOLDOWN_TICKS = 120;
 
 	@SubscribeEvent
@@ -78,6 +60,29 @@ public class AshWeaverOnEntityTickUpdateProcedure {
 			return;
 
 		Player foundPlayer = (Player) findEntityInWorldRange(world, Player.class, x, y, z, PLAYER_RANGE);
+
+		// One Ash Weaver per player enforcement
+		if (foundPlayer != null) {
+			String playerUUIDStr = foundPlayer.getUUID().toString();
+			String assignedUUIDStr = ashWeaver.getEntityData().get(AshWeaverEntity.DATA_assignedPlayer);
+
+			if (assignedUUIDStr == null || assignedUUIDStr.isEmpty()) {
+				// Check if this player already has an assigned weaver
+				List<AshWeaverEntity> allWeavers = world.getEntitiesOfClass(AshWeaverEntity.class,
+						AABB.ofSize(new Vec3(foundPlayer.getX(), foundPlayer.getY(), foundPlayer.getZ()), PLAYER_RANGE * 2, PLAYER_RANGE * 2, PLAYER_RANGE * 2),
+						e -> e != ashWeaver);
+				boolean playerAlreadyHasWeaver = allWeavers.stream()
+						.anyMatch(w -> playerUUIDStr.equals(w.getEntityData().get(AshWeaverEntity.DATA_assignedPlayer)));
+				if (playerAlreadyHasWeaver) {
+					ashWeaver.discard();
+					return;
+				} else {
+					ashWeaver.getEntityData().set(AshWeaverEntity.DATA_assignedPlayer, playerUUIDStr);
+				}
+			}
+		}
+
+		// Movement
 		if (foundPlayer != null && ashWeaver instanceof LivingEntity living && living.hasLineOfSight(foundPlayer)) {
 			double distance = ashWeaver.position().distanceTo(foundPlayer.position());
 			if (distance > STOP_DISTANCE) {

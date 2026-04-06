@@ -45,7 +45,7 @@
     "creature": [
       {
         "type": "the_backwoods:ash_weaver",
-        "weight": 2,
+        "weight": 1,
         "minCount": 1,
         "maxCount": 1
       }

@@ -24,31 +24,6 @@
       }
     ]
   },
-  "whisperstage1": {
-    "subtitle": "subtitles.whisperstage1",
-    "sounds": [
-      {
-        "name": "the_backwoods:whisper_1",
-        "stream": false
-      },
-      {
-        "name": "the_backwoods:whisper_2",
-        "stream": false
-      },
-      {
-        "name": "the_backwoods:whisper_3",
-        "stream": false
-      },
-      {
-        "name": "the_backwoods:whisper_4",
-        "stream": false
-      },
-      {
-        "name": "the_backwoods:whisper_5",
-        "stream": false
-      }
-    ]
-  },
   "rot_step": {
     "subtitle": "subtitles.rot_step",
     "sounds": [
@@ -225,19 +200,6 @@
       }
     ]
   },
-  "degradation": {
-    "subtitle": "subtitles.degradation",
-    "sounds": [
-      {
-        "name": "the_backwoods:o1_stage6",
-        "stream": false
-      },
-      {
-        "name": "the_backwoods:r1_stage6",
-        "stream": false
-      }
-    ]
-  },
   "still_music": {
     "subtitle": "subtitles.still_music",
     "sounds": [
@@ -297,6 +259,69 @@
     "sounds": [
       {
         "name": "the_backwoods:746130__klankbeeld__room-tone-empty-aparment-hot-summer-907-am-220813_0498",
+        "stream": false
+      }
+    ]
+  },
+  "degradation_r1": {
+    "subtitle": "subtitles.degradation_r1",
+    "sounds": [
+      {
+        "name": "the_backwoods:r1_stage6",
+        "stream": false
+      }
+    ]
+  },
+  "degradation_o1": {
+    "subtitle": "subtitles.degradation_o1",
+    "sounds": [
+      {
+        "name": "the_backwoods:o1_stage6",
+        "stream": false
+      }
+    ]
+  },
+  "whisper1": {
+    "subtitle": "subtitles.whisper1",
+    "sounds": [
+      {
+        "name": "the_backwoods:whisper_1",
+        "stream": false
+      }
+    ]
+  },
+  "whisper2": {
+    "subtitle": "subtitles.whisper2",
+    "sounds": [
+      {
+        "name": "the_backwoods:whisper_2",
+        "stream": false
+      }
+    ]
+  },
+  "whisper3": {
+    "subtitle": "subtitles.whisper3",
+    "sounds": [
+      {
+        "name": "the_backwoods:whisper_3",
+        "stream": false
+      }
+    ]
+  },
+  "whisper4": {
+    "subtitle": "subtitles.whisper4",
+    "sounds": [
+      {
+        "name": "the_backwoods:whisper_4",
+        "stream": false
+      }
+    ]
+  },
+  "whisper5": {
+    "subtitle": "subtitles.whisper5",
+    "sounds": [
+      {
+        "name": "the_backwoods:whisper_5",
         "stream": false
       }
     ]

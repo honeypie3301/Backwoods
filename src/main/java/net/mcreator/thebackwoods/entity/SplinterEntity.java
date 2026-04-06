@@ -37,6 +37,7 @@ import net.minecraft.core.BlockPos;
 
 import net.mcreator.thebackwoods.procedures.SplinterOnInitialEntitySpawnProcedure;
 import net.mcreator.thebackwoods.procedures.SplinterOnEntityTickUpdateProcedure;
+import net.mcreator.thebackwoods.procedures.SplinterEntityDiesProcedure;
 import net.mcreator.thebackwoods.init.TheBackwoodsModEntities;
 
 import javax.annotation.Nullable;
@@ -125,6 +126,12 @@ public class SplinterEntity extends Monster {
 		if (damagesource.is(DamageTypes.DRAGON_BREATH))
 			return false;
 		return super.hurt(damagesource, amount);
+	}
+
+	@Override
+	public void die(DamageSource source) {
+		super.die(source);
+		SplinterEntityDiesProcedure.execute(this.level(), this.getX(), this.getY(), this.getZ());
 	}
 
 	@Override

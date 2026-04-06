@@ -3,12 +3,7 @@
   "temperature": 0.17,
   "downfall": 0,
   "effects": {
-    "mood_sound": {
-      "sound": "the_backwoods:degradation",
-      "tick_delay": 900,
-      "offset": 8,
-      "block_search_extent": 2
-    },
+    "ambient_sound": "the_backwoods:degradation_r1",
     "particle": {
       "options": {
         "type": "ash"

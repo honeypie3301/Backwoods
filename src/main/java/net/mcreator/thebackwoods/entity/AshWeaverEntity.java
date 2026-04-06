@@ -35,6 +35,7 @@ import net.mcreator.thebackwoods.init.TheBackwoodsModEntities;
 public class AshWeaverEntity extends PathfinderMob {
 	public static final EntityDataAccessor<Integer> DATA_roseCooldown = SynchedEntityData.defineId(AshWeaverEntity.class, EntityDataSerializers.INT);
 	public static final EntityDataAccessor<Integer> DATA_roseCount = SynchedEntityData.defineId(AshWeaverEntity.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<String> DATA_assignedPlayer = SynchedEntityData.defineId(AshWeaverEntity.class, EntityDataSerializers.STRING);
 
 	public AshWeaverEntity(EntityType<AshWeaverEntity> type, Level world) {
 		super(type, world);
@@ -47,6 +48,7 @@ public class AshWeaverEntity extends PathfinderMob {
 		super.defineSynchedData(builder);
 		builder.define(DATA_roseCooldown, 0);
 		builder.define(DATA_roseCount, 0);
+		builder.define(DATA_assignedPlayer, "");
 	}
 
 	@Override
@@ -103,6 +105,7 @@ public class AshWeaverEntity extends PathfinderMob {
 		super.addAdditionalSaveData(compound);
 		compound.putInt("DataroseCooldown", this.entityData.get(DATA_roseCooldown));
 		compound.putInt("DataroseCount", this.entityData.get(DATA_roseCount));
+		compound.putString("DataassignedPlayer", this.entityData.get(DATA_assignedPlayer));
 	}
 
 	@Override
@@ -112,6 +115,8 @@ public class AshWeaverEntity extends PathfinderMob {
 			this.entityData.set(DATA_roseCooldown, compound.getInt("DataroseCooldown"));
 		if (compound.contains("DataroseCount"))
 			this.entityData.set(DATA_roseCount, compound.getInt("DataroseCount"));
+		if (compound.contains("DataassignedPlayer"))
+			this.entityData.set(DATA_assignedPlayer, compound.getString("DataassignedPlayer"));
 	}
 
 	@Override

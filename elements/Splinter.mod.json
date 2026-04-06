@@ -171,6 +171,9 @@
         "value": 0
       }
     ],
+    "whenMobDies": {
+      "name": "SplinterEntityDies"
+    },
     "onMobTickUpdate": {
       "name": "SplinterOnEntityTickUpdate"
     },

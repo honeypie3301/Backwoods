@@ -21,7 +21,7 @@
       "falpha": 0.0
     },
     "ambientSound": {
-      "value": ""
+      "value": "CUSTOM:degradation_r1"
     },
     "additionsSound": {
       "value": ""
@@ -30,7 +30,7 @@
       "value": ""
     },
     "moodSound": {
-      "value": "CUSTOM:degradation"
+      "value": ""
     },
     "moodSoundDelay": 900,
     "spawnParticles": true,

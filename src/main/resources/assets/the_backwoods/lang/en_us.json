@@ -86,5 +86,12 @@
   "subtitles.still_mood2": "Serenity",
   "subtitles.still_mood3": "Serenity",
   "subtitles.still_ambient2": "Ambient",
-  "block.the_backwoods.rotten_oak_planks.description_1": "§8Something hollow hides beneath it."
+  "block.the_backwoods.rotten_oak_planks.description_1": "§8Something hollow hides beneath it.",
+  "subtitles.degradation_r1": "Degradation",
+  "subtitles.degradation_o1": "Degradation",
+  "subtitles.whisper1": "Whisper",
+  "subtitles.whisper2": "Whisper",
+  "subtitles.whisper3": "Whisper",
+  "subtitles.whisper4": "Whisper",
+  "subtitles.whisper5": "Whisper"
 }
