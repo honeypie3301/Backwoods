@@ -109,21 +109,12 @@
         },
         "minGroup": 1,
         "maxGroup": 1,
-        "weight": 10,
+        "weight": 2,
         "spawnType": "monster"
       },
       {
         "entity": {
           "value": "CUSTOM:LogSplinter"
-        },
-        "minGroup": 1,
-        "maxGroup": 1,
-        "weight": 15,
-        "spawnType": "monster"
-      },
-      {
-        "entity": {
-          "value": "CUSTOM:AshWeaver"
         },
         "minGroup": 1,
         "maxGroup": 1,

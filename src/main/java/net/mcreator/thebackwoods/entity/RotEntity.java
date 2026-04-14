@@ -34,6 +34,7 @@ import net.minecraft.core.BlockPos;
 import net.mcreator.thebackwoods.procedures.RotOnInitialEntitySpawnProcedure;
 import net.mcreator.thebackwoods.procedures.RotOnEntityTickUpdateProcedure;
 import net.mcreator.thebackwoods.procedures.RotEntityIsHurtProcedure;
+import net.mcreator.thebackwoods.procedures.RotEntityDiesProcedure;
 import net.mcreator.thebackwoods.init.TheBackwoodsModItems;
 
 import javax.annotation.Nullable;
@@ -131,6 +132,12 @@ public class RotEntity extends Monster {
 	@Override
 	public boolean ignoreExplosion(Explosion explosion) {
 		return true;
+	}
+
+	@Override
+	public void die(DamageSource source) {
+		super.die(source);
+		RotEntityDiesProcedure.execute(source.getEntity());
 	}
 
 	@Override

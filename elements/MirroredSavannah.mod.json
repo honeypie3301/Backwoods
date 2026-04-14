@@ -31,7 +31,7 @@
       "value": ""
     },
     "music": {
-      "value": ""
+      "value": "CUSTOM:still_music"
     },
     "moodSound": {
       "value": ""
@@ -52,8 +52,8 @@
       "max": 1.0
     },
     "genHumidity": {
-      "min": -0.35,
-      "max": 0.1
+      "min": -0.5,
+      "max": 0.0
     },
     "genContinentalness": {
       "min": 0.3,
@@ -93,7 +93,7 @@
     "spawnMineshaft": true,
     "spawnMineshaftMesa": false,
     "spawnPillagerOutpost": false,
-    "villageType": "none",
+    "villageType": "savanna",
     "spawnWoodlandMansion": false,
     "spawnJungleTemple": false,
     "spawnDesertPyramid": false,
@@ -109,6 +109,52 @@
     "spawnBastionRemnant": false,
     "spawnEndCity": false,
     "spawnRuinedPortal": "NONE",
-    "spawnEntries": []
+    "spawnEntries": [
+      {
+        "entity": {
+          "value": "EntitySheep"
+        },
+        "minGroup": 2,
+        "maxGroup": 4,
+        "weight": 90,
+        "spawnType": "creature"
+      },
+      {
+        "entity": {
+          "value": "EntityArmadillo"
+        },
+        "minGroup": 2,
+        "maxGroup": 3,
+        "weight": 50,
+        "spawnType": "creature"
+      },
+      {
+        "entity": {
+          "value": "EntityHorse"
+        },
+        "minGroup": 1,
+        "maxGroup": 4,
+        "weight": 20,
+        "spawnType": "creature"
+      },
+      {
+        "entity": {
+          "value": "EntityGlowSquid"
+        },
+        "minGroup": 1,
+        "maxGroup": 4,
+        "weight": 25,
+        "spawnType": "undergroundWaterCreature"
+      },
+      {
+        "entity": {
+          "value": "EntitySkeleton"
+        },
+        "minGroup": 1,
+        "maxGroup": 2,
+        "weight": 100,
+        "spawnType": "monster"
+      }
+    ]
   }
 }

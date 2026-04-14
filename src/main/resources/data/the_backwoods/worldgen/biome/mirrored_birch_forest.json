@@ -24,8 +24,46 @@
     "water_fog_color": 329011
   },
   "spawners": {
-    "monster": [],
-    "creature": [],
+    "monster": [
+      {
+        "type": "enderman",
+        "weight": 5,
+        "minCount": 1,
+        "maxCount": 1
+      },
+      {
+        "type": "zombie",
+        "weight": 20,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "creeper",
+        "weight": 40,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "skeleton",
+        "weight": 60,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ],
+    "creature": [
+      {
+        "type": "pig",
+        "weight": 80,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "cow",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
     "ambient": [],
     "axolotls": [],
     "underground_water_creature": [],

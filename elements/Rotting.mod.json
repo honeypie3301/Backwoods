@@ -27,7 +27,7 @@
     "sunHeightAffectsFog": false,
     "canRespawnHere": true,
     "hasFog": true,
-    "ambientLight": 0.018,
+    "ambientLight": 0.016,
     "doesWaterVaporize": false,
     "hasFixedTime": true,
     "fixedTimeValue": 1000,

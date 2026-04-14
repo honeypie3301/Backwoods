@@ -25,7 +25,7 @@ public class BackwoodsDimension {
 			DimensionSpecialEffects customEffect = new DimensionSpecialEffects(Float.NaN, true, DimensionSpecialEffects.SkyType.NORMAL, false, false) {
 				@Override
 				public Vec3 getBrightnessDependentFogColor(Vec3 color, float sunHeight) {
-					return color;
+					return new Vec3(0.6235294118, 0.5450980392, 0.2509803922);
 				}
 
 				@Override

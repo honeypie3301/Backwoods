@@ -34,6 +34,7 @@ public class TheBackwoodsModTabs {
 			tabData.accept(TheBackwoodsModItems.LOG_SPLINTER_SPAWN_EGG.get());
 			tabData.accept(TheBackwoodsModItems.ASH_WEAVER_SPAWN_EGG.get());
 			tabData.accept(TheBackwoodsModItems.ROT_SPAWN_EGG.get());
+			tabData.accept(TheBackwoodsModItems.BLINDSPOT_SPLINTER_SPAWN_EGG.get());
 		} else if (tabData.getTabKey() == CreativeModeTabs.NATURAL_BLOCKS) {
 			tabData.accept(TheBackwoodsModBlocks.ASH_ROSE.get().asItem());
 			tabData.accept(TheBackwoodsModBlocks.FADED_BLOCK.get().asItem());

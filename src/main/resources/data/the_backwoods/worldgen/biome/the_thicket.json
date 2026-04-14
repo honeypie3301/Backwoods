@@ -29,7 +29,7 @@
     "foliage_color": 10387789,
     "grass_color": 9470285,
     "sky_color": -7046095,
-    "fog_color": -8037346,
+    "fog_color": -6321344,
     "water_color": 4159204,
     "water_fog_color": 329011
   },
@@ -37,7 +37,7 @@
     "monster": [
       {
         "type": "the_backwoods:log_splinter",
-        "weight": 3,
+        "weight": 2,
         "minCount": 1,
         "maxCount": 1
       }

@@ -17,7 +17,7 @@
       "falpha": 0.0
     },
     "fogColor": {
-      "value": -8037346,
+      "value": -6321344,
       "falpha": 0.0
     },
     "ambientSound": {
@@ -107,7 +107,7 @@
         },
         "minGroup": 1,
         "maxGroup": 1,
-        "weight": 3,
+        "weight": 2,
         "spawnType": "monster"
       },
       {

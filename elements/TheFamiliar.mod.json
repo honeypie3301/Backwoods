@@ -20,6 +20,9 @@
       },
       {
         "value": "CUSTOM:MirroredJungle"
+      },
+      {
+        "value": "CUSTOM:MirroredOcean"
       }
     ],
     "worldGenType": "Normal world gen",
@@ -32,7 +35,7 @@
     "seaLevel": 63,
     "generateOreVeins": true,
     "generateAquifers": true,
-    "horizontalNoiseSize": 1,
+    "horizontalNoiseSize": 2,
     "verticalNoiseSize": 2,
     "defaultEffects": "overworld",
     "useCustomEffects": false,

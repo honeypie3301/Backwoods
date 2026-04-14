@@ -37,4 +37,9 @@ public class TheBackwoodsModSounds {
 	public static final DeferredHolder<SoundEvent, SoundEvent> WHISPER3 = REGISTRY.register("whisper3", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "whisper3")));
 	public static final DeferredHolder<SoundEvent, SoundEvent> WHISPER4 = REGISTRY.register("whisper4", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "whisper4")));
 	public static final DeferredHolder<SoundEvent, SoundEvent> WHISPER5 = REGISTRY.register("whisper5", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "whisper5")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> WOOD_CREAK_1 = REGISTRY.register("wood_creak_1", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "wood_creak_1")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> WOOD_CREAK_2 = REGISTRY.register("wood_creak_2", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "wood_creak_2")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> WOOD_CREAK_3 = REGISTRY.register("wood_creak_3", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "wood_creak_3")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> WOOD_CREAK_4 = REGISTRY.register("wood_creak_4", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "wood_creak_4")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> WOOD_CREAK_5 = REGISTRY.register("wood_creak_5", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "wood_creak_5")));
 }

@@ -13,7 +13,7 @@
       }
     ],
     "spacing": 90,
-    "separation": 66,
+    "separation": 50,
     "restrictionBiomes": [
       {
         "value": "CUSTOM:WoodPlains"

@@ -32,7 +32,9 @@
     "enableMeleeDamage": false,
     "damageVsEntity": 0.0,
     "specialInformation": {
-      "fixedValue": []
+      "fixedValue": [
+        "§8What's this gonna do?"
+      ]
     },
     "glowCondition": {
       "fixedValue": false

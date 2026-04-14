@@ -325,5 +325,50 @@
         "stream": false
       }
     ]
+  },
+  "wood_creak_1": {
+    "subtitle": "subtitles.wood_creak_1",
+    "sounds": [
+      {
+        "name": "the_backwoods:wood_crack1",
+        "stream": false
+      }
+    ]
+  },
+  "wood_creak_2": {
+    "subtitle": "subtitles.wood_creak_2",
+    "sounds": [
+      {
+        "name": "the_backwoods:wood_crack2",
+        "stream": false
+      }
+    ]
+  },
+  "wood_creak_3": {
+    "subtitle": "subtitles.wood_creak_3",
+    "sounds": [
+      {
+        "name": "the_backwoods:wood_crack3",
+        "stream": false
+      }
+    ]
+  },
+  "wood_creak_4": {
+    "subtitle": "subtitles.wood_creak_4",
+    "sounds": [
+      {
+        "name": "the_backwoods:wood_crack4",
+        "stream": false
+      }
+    ]
+  },
+  "wood_creak_5": {
+    "subtitle": "subtitles.wood_creak_5",
+    "sounds": [
+      {
+        "name": "the_backwoods:wood_crack5",
+        "stream": false
+      }
+    ]
   }
 }

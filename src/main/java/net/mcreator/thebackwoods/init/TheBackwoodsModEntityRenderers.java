@@ -8,11 +8,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.api.distmarker.Dist;
 
-import net.mcreator.thebackwoods.client.renderer.SplinterRenderer;
-import net.mcreator.thebackwoods.client.renderer.RotRenderer;
-import net.mcreator.thebackwoods.client.renderer.LogSplinterRenderer;
-import net.mcreator.thebackwoods.client.renderer.HollowRenderer;
-import net.mcreator.thebackwoods.client.renderer.AshWeaverRenderer;
+import net.mcreator.thebackwoods.client.renderer.*;
 
 @EventBusSubscriber(Dist.CLIENT)
 public class TheBackwoodsModEntityRenderers {
@@ -23,5 +19,6 @@ public class TheBackwoodsModEntityRenderers {
 		event.registerEntityRenderer(TheBackwoodsModEntities.LOG_SPLINTER.get(), LogSplinterRenderer::new);
 		event.registerEntityRenderer(TheBackwoodsModEntities.ASH_WEAVER.get(), AshWeaverRenderer::new);
 		event.registerEntityRenderer(TheBackwoodsModEntities.ROT.get(), RotRenderer::new);
+		event.registerEntityRenderer(TheBackwoodsModEntities.BLINDSPOT_SPLINTER.get(), BlindspotSplinterRenderer::new);
 	}
 }

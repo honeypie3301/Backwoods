@@ -43,35 +43,23 @@ import java.util.Comparator;
 @EventBusSubscriber
 public class LogSplinterOnEntityTickUpdateProcedure {
 
-	// Higher = must look more directly at Log Splinter to freeze it, lower = wider freeze cone.
 	private static final double WATCH_DOT_THRESHOLD = 0.5;
-
-	// Log Splinter base move speed while active.
 	private static final double ACTIVE_MOVE_SPEED = 0.325;
-
-	// Mining formula: threshold = destroySpeed * MINE_SPEED_MULTIPLIER + MINE_SPEED_BASE.
-	// Increase these to make mining slower.
 	private static final float MINE_SPEED_MULTIPLIER = 40f;
 	private static final float MINE_SPEED_BASE = 40f;
-
-	// Blocks with destroy speed >= this are treated as too hard to mine.
 	private static final float MAX_BREAKABLE_HARDNESS = 50f;
-
-	// Log Splinter scan radius around ticking entity.
 	private static final double LOG_SPLINTER_SCAN_RADIUS = 28;
-
-	// Log Splinter target range for finding a player.
 	private static final double TARGET_RANGE = 56;
-
-	// Forward mining ray distance.
 	private static final double MINE_RAY_DISTANCE = 3.0;
-
-	// Ash Rose item wilt time in ticks for Log Splinter.
 	private static final double ROSE_WILT_TICKS = 750;
-
-	// Nearby Ash Rose block scan box around Log Splinter.
 	private static final int ROSE_SCAN_XZ = 6;
 	private static final int ROSE_SCAN_Y = 3;
+
+	// How many ticks the player must stare before rage triggers
+	private static final int RAGE_WATCH_THRESHOLD = 290;
+
+	// Log Splinter must be beyond this range for rage to end
+	private static final double RAGE_ESCAPE_RANGE = 18.0;
 
 	@SubscribeEvent
 	public static void onEntityTick(EntityTickEvent.Pre event) {
@@ -86,7 +74,7 @@ public class LogSplinterOnEntityTickUpdateProcedure {
 		if (entity == null)
 			return;
 		if (!(entity instanceof LogSplinterEntity))
-        		return;
+			return;
 
 		final Vec3 center = new Vec3(x, y, z);
 
@@ -94,10 +82,15 @@ public class LogSplinterOnEntityTickUpdateProcedure {
 				.stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(center))).toList()) {
 
 			Player foundPlayer = (Player) findEntityInWorldRange(world, Player.class, logSplinter.getX(), logSplinter.getY(), logSplinter.getZ(), TARGET_RANGE);
-			if (foundPlayer == null)
+			if (foundPlayer == null) {
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
 				continue;
+			}
 
 			int frozenByRose = logSplinter.getEntityData().get(LogSplinterEntity.DATA_frozenByRose);
+			int isEnraged = logSplinter.getEntityData().get(LogSplinterEntity.DATA_isEnraged);
+			int watchTimer = logSplinter.getEntityData().get(LogSplinterEntity.DATA_watchTimer);
 
 			Vec3 toLogSplinter = logSplinter.getEyePosition().subtract(foundPlayer.getEyePosition()).normalize();
 			double dot = foundPlayer.getLookAngle().normalize().dot(toLogSplinter);
@@ -105,7 +98,29 @@ public class LogSplinterOnEntityTickUpdateProcedure {
 			boolean canSee = foundPlayer.hasLineOfSight(logSplinter);
 			boolean isWatched = facing && canSee;
 
-			if (isWatched || frozenByRose == 1) {
+			// Check if player has escaped range to calm rage
+			double distToPlayer = logSplinter.position().distanceTo(foundPlayer.position());
+			if (isEnraged == 1 && distToPlayer > RAGE_ESCAPE_RANGE) {
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+				isEnraged = 0;
+			}
+
+			// Increment or reset watch timer
+			if (isWatched && isEnraged == 0) {
+				watchTimer++;
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, watchTimer);
+				if (watchTimer >= RAGE_WATCH_THRESHOLD) {
+					logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 1);
+					logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+					isEnraged = 1;
+				}
+			} else if (!isWatched && isEnraged == 0) {
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+			}
+
+			// Freeze logic - enraged log splinter ignores gaze
+			if ((isWatched && isEnraged == 0) || frozenByRose == 1) {
 				setSpeed(logSplinter, 0);
 				if (logSplinter instanceof Mob mob) {
 					mob.getNavigation().stop();
@@ -197,6 +212,8 @@ public class LogSplinterOnEntityTickUpdateProcedure {
 
 			if (foundRose) {
 				setSpeed(logSplinter, 0);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
 				if (logSplinter instanceof Mob mob) {
 					mob.getNavigation().stop();
 				}

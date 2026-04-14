@@ -25,6 +25,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.BlockPos;
+import net.minecraft.advancements.AdvancementProgress;
+import net.minecraft.advancements.AdvancementHolder;
 
 import net.mcreator.thebackwoods.entity.RotEntity;
 
@@ -109,15 +111,25 @@ public class RotEntityIsHurtProcedure {
 			if ((entity instanceof LivingEntity _livEnt ? _livEnt.getHealth() : -1) <= 20) {
 				if (world instanceof Level _level) {
 					if (!_level.isClientSide()) {
-						_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:rot_roar")), SoundSource.HOSTILE, 1, (float) 0.4);
+						_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:rot_roar")), SoundSource.HOSTILE, (float) 1.2, (float) 0.4);
 					} else {
-						_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:rot_roar")), SoundSource.HOSTILE, 1, (float) 0.4, false);
+						_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:rot_roar")), SoundSource.HOSTILE, (float) 1.2, (float) 0.4, false);
 					}
 				}
 				if (world instanceof ServerLevel _level)
-					_level.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, (entity.getX()), (entity.getY() + 1), (entity.getZ()), 150, 0.1, 0.1, 0.1, 0.2);
+					_level.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, (entity.getX()), (entity.getY() + 1), (entity.getZ()), 200, 0.1, 0.1, 0.1, 0.1);
 				if (!entity.level().isClientSide())
 					entity.discard();
+				if (attacker instanceof ServerPlayer _player) {
+					AdvancementHolder _adv = _player.server.getAdvancements().get(ResourceLocation.parse("the_backwoods:rot_vanish"));
+					if (_adv != null) {
+						AdvancementProgress _ap = _player.getAdvancements().getOrStartProgress(_adv);
+						if (!_ap.isDone()) {
+							for (String criteria : _ap.getRemainingCriteria())
+								_player.getAdvancements().award(_adv, criteria);
+						}
+					}
+				}
 			}
 			if ((entity instanceof LivingEntity _livEnt ? _livEnt.getHealth() : -1) <= 250 && entity.getPersistentData().getDouble("msg1_fired") == 0) {
 				if (!(foundPlayer == null)) {

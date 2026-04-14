@@ -23,13 +23,17 @@
     "seaLevel": 63,
     "generateOreVeins": false,
     "generateAquifers": false,
-    "horizontalNoiseSize": 1,
+    "horizontalNoiseSize": 2,
     "verticalNoiseSize": 2,
     "defaultEffects": "overworld",
     "useCustomEffects": true,
     "hasClouds": false,
     "cloudHeight": 192,
     "skyType": "NORMAL",
+    "airColor": {
+      "value": -6321344,
+      "falpha": 0.0
+    },
     "sunHeightAffectsFog": false,
     "canRespawnHere": true,
     "hasFog": true,

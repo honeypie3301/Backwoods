@@ -228,6 +228,9 @@
         "value": 0
       }
     ],
+    "whenMobDies": {
+      "name": "RotEntityDies"
+    },
     "whenMobIsHurt": {
       "name": "RotEntityIsHurt"
     },

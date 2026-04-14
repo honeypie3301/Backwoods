@@ -15,11 +15,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.core.registries.Registries;
 
-import net.mcreator.thebackwoods.entity.SplinterEntity;
-import net.mcreator.thebackwoods.entity.RotEntity;
-import net.mcreator.thebackwoods.entity.LogSplinterEntity;
-import net.mcreator.thebackwoods.entity.HollowEntity;
-import net.mcreator.thebackwoods.entity.AshWeaverEntity;
+import net.mcreator.thebackwoods.entity.*;
 import net.mcreator.thebackwoods.TheBackwoodsMod;
 
 @EventBusSubscriber
@@ -39,6 +35,10 @@ public class TheBackwoodsModEntities {
 					.ridingOffset(-0.6f).sized(0.6f, 1.8f));
 	public static final DeferredHolder<EntityType<?>, EntityType<RotEntity>> ROT = register("rot",
 			EntityType.Builder.<RotEntity>of(RotEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune().ridingOffset(-0.6f).sized(0.7f, 2f));
+	public static final DeferredHolder<EntityType<?>, EntityType<BlindspotSplinterEntity>> BLINDSPOT_SPLINTER = register("blindspot_splinter",
+			EntityType.Builder.<BlindspotSplinterEntity>of(BlindspotSplinterEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3)
+
+					.ridingOffset(-0.6f).sized(0.6f, 1.8f));
 
 	// Start of user code block custom entities
 	// End of user code block custom entities
@@ -53,6 +53,7 @@ public class TheBackwoodsModEntities {
 		LogSplinterEntity.init(event);
 		AshWeaverEntity.init(event);
 		RotEntity.init(event);
+		BlindspotSplinterEntity.init(event);
 	}
 
 	@SubscribeEvent
@@ -62,5 +63,6 @@ public class TheBackwoodsModEntities {
 		event.put(LOG_SPLINTER.get(), LogSplinterEntity.createAttributes().build());
 		event.put(ASH_WEAVER.get(), AshWeaverEntity.createAttributes().build());
 		event.put(ROT.get(), RotEntity.createAttributes().build());
+		event.put(BLINDSPOT_SPLINTER.get(), BlindspotSplinterEntity.createAttributes().build());
 	}
 }

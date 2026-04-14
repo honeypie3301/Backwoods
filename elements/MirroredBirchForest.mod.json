@@ -48,12 +48,12 @@
     "spawnInCaves": false,
     "spawnBiomeNether": false,
     "genTemperature": {
-      "min": 0.2,
-      "max": 1.0
+      "min": 0.0,
+      "max": 0.4
     },
     "genHumidity": {
-      "min": 0.0,
-      "max": 1.0
+      "min": 0.4,
+      "max": 0.9
     },
     "genContinentalness": {
       "min": 0.3,
@@ -64,7 +64,7 @@
       "max": 0.5
     },
     "genWeirdness": {
-      "min": -0.1,
+      "min": -1.0,
       "max": 1.0
     },
     "treesPerChunk": 4,
@@ -88,7 +88,7 @@
       "Ores"
     ],
     "spawnStronghold": false,
-    "spawnMineshaft": false,
+    "spawnMineshaft": true,
     "spawnMineshaftMesa": false,
     "spawnPillagerOutpost": false,
     "villageType": "none",
@@ -107,6 +107,61 @@
     "spawnBastionRemnant": false,
     "spawnEndCity": false,
     "spawnRuinedPortal": "NONE",
-    "spawnEntries": []
+    "spawnEntries": [
+      {
+        "entity": {
+          "value": "EntityPig"
+        },
+        "minGroup": 1,
+        "maxGroup": 2,
+        "weight": 80,
+        "spawnType": "creature"
+      },
+      {
+        "entity": {
+          "value": "EntityCow"
+        },
+        "minGroup": 1,
+        "maxGroup": 1,
+        "weight": 20,
+        "spawnType": "creature"
+      },
+      {
+        "entity": {
+          "value": "EntityEnderman"
+        },
+        "minGroup": 1,
+        "maxGroup": 1,
+        "weight": 5,
+        "spawnType": "monster"
+      },
+      {
+        "entity": {
+          "value": "EntityZombie"
+        },
+        "minGroup": 2,
+        "maxGroup": 4,
+        "weight": 20,
+        "spawnType": "monster"
+      },
+      {
+        "entity": {
+          "value": "EntityCreeper"
+        },
+        "minGroup": 2,
+        "maxGroup": 4,
+        "weight": 40,
+        "spawnType": "monster"
+      },
+      {
+        "entity": {
+          "value": "EntitySkeleton"
+        },
+        "minGroup": 2,
+        "maxGroup": 4,
+        "weight": 60,
+        "spawnType": "monster"
+      }
+    ]
   }
 }

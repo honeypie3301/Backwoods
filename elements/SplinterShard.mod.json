@@ -3,7 +3,7 @@
   "_type": "item",
   "definition": {
     "renderType": 0,
-    "texture": "splinter_shard",
+    "texture": "splinter_shard_2",
     "customModelName": "Normal",
     "guiTexture": "",
     "customProperties": {},
@@ -20,7 +20,7 @@
     "enchantability": 0,
     "useDuration": 0,
     "toolType": 1.0,
-    "damageCount": 0,
+    "damageCount": 90,
     "recipeRemainder": {
       "value": ""
     },
@@ -29,8 +29,8 @@
     "isPiglinCurrency": false,
     "stayInGridWhenCrafting": false,
     "damageOnCrafting": false,
-    "enableMeleeDamage": false,
-    "damageVsEntity": 0.0,
+    "enableMeleeDamage": true,
+    "damageVsEntity": 0.67,
     "specialInformation": {
       "fixedValue": []
     },

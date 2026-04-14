@@ -52,6 +52,8 @@ public class TheBackwoodsModItems {
 	public static final DeferredItem<Item> ROTTEN_OAK_PRESSURE_PLATE;
 	public static final DeferredItem<Item> PALE_DRAUGHT_BOTTLE;
 	public static final DeferredItem<Item> PETRIFIED_ROTTEN_OAK_WOOD;
+	public static final DeferredItem<Item> BLINDSPOT_SPLINTER_SPAWN_EGG;
+	public static final DeferredItem<Item> BLINDSPOT_SPLINTER_SPAWNER;
 	static {
 		BACKWOODS = REGISTRY.register("backwoods", BackwoodsItem::new);
 		SPLINTER_SPAWN_EGG = REGISTRY.register("splinter_spawn_egg", () -> new DeferredSpawnEggItem(TheBackwoodsModEntities.SPLINTER, -7643606, -3632054, new Item.Properties()));
@@ -87,6 +89,8 @@ public class TheBackwoodsModItems {
 		ROTTEN_OAK_PRESSURE_PLATE = block(TheBackwoodsModBlocks.ROTTEN_OAK_PRESSURE_PLATE);
 		PALE_DRAUGHT_BOTTLE = REGISTRY.register("pale_draught_bottle", PaleDraughtBottleItem::new);
 		PETRIFIED_ROTTEN_OAK_WOOD = block(TheBackwoodsModBlocks.PETRIFIED_ROTTEN_OAK_WOOD, new Item.Properties().rarity(Rarity.UNCOMMON));
+		BLINDSPOT_SPLINTER_SPAWN_EGG = REGISTRY.register("blindspot_splinter_spawn_egg", () -> new DeferredSpawnEggItem(TheBackwoodsModEntities.BLINDSPOT_SPLINTER, -7643606, -3632054, new Item.Properties()));
+		BLINDSPOT_SPLINTER_SPAWNER = block(TheBackwoodsModBlocks.BLINDSPOT_SPLINTER_SPAWNER, new Item.Properties().fireResistant());
 	}
 
 	// Start of user code block custom items

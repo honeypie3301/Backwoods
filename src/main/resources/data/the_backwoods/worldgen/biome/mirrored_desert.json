@@ -24,11 +24,38 @@
     "water_fog_color": 329011
   },
   "spawners": {
-    "monster": [],
-    "creature": [],
+    "monster": [
+      {
+        "type": "husk",
+        "weight": 85,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "creature": [
+      {
+        "type": "rabbit",
+        "weight": 20,
+        "minCount": 2,
+        "maxCount": 3
+      },
+      {
+        "type": "camel",
+        "weight": 3,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
     "ambient": [],
     "axolotls": [],
-    "underground_water_creature": [],
+    "underground_water_creature": [
+      {
+        "type": "glow_squid",
+        "weight": 1,
+        "minCount": 4,
+        "maxCount": 6
+      }
+    ],
     "water_creature": [],
     "water_ambient": [],
     "misc": []
@@ -47,7 +74,10 @@
       "minecraft:lake_lava_underground"
     ],
     [],
-    [],
+    [
+      "minecraft:fossil_upper",
+      "minecraft:fossil_lower"
+    ],
     [
       "minecraft:desert_well"
     ],

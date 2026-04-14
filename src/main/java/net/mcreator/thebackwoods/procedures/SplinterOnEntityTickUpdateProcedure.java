@@ -43,35 +43,23 @@ import java.util.Comparator;
 @EventBusSubscriber
 public class SplinterOnEntityTickUpdateProcedure {
 
-	// Higher = must look more directly at Splinter to freeze it, lower = wider freeze cone.
 	private static final double WATCH_DOT_THRESHOLD = 0.5;
-
-	// Splinter base move speed while active.
 	private static final double ACTIVE_MOVE_SPEED = 0.325;
-
-	// Mining formula: threshold = destroySpeed * MINE_SPEED_MULTIPLIER + MINE_SPEED_BASE.
-	// Increase these to make mining slower.
 	private static final float MINE_SPEED_MULTIPLIER = 50f;
 	private static final float MINE_SPEED_BASE = 50f;
-
-	// Blocks with destroy speed >= this are treated as too hard to mine.
 	private static final float MAX_BREAKABLE_HARDNESS = 50f;
-
-	// Splinter must be within this range to evaluate a player target.
 	private static final double TARGET_RANGE = 56;
-
-	// Splinter scan radius around ticking entity.
 	private static final double SPLINTER_SCAN_RADIUS = 28;
-
-	// Forward mining ray distance.
 	private static final double MINE_RAY_DISTANCE = 2.0;
-
-	// Ash Rose item wilt time in ticks.
 	private static final double ROSE_WILT_TICKS = 450;
-
-	// Nearby Ash Rose block scan box around Splinter.
 	private static final int ROSE_SCAN_XZ = 6;
 	private static final int ROSE_SCAN_Y = 3;
+
+	// How many ticks the player must stare before rage triggers
+	private static final int RAGE_WATCH_THRESHOLD = 300;
+
+	// Splinter must be within this range to calm down from rage
+	private static final double RAGE_ESCAPE_RANGE = 14.0;
 
 	@SubscribeEvent
 	public static void onEntityTick(EntityTickEvent.Pre event) {
@@ -86,7 +74,7 @@ public class SplinterOnEntityTickUpdateProcedure {
 		if (entity == null)
 			return;
 		if (!(entity instanceof SplinterEntity))
-        		return;
+			return;
 
 		final Vec3 center = new Vec3(x, y, z);
 
@@ -94,18 +82,46 @@ public class SplinterOnEntityTickUpdateProcedure {
 				.stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(center))).toList()) {
 
 			Player foundPlayer = (Player) findEntityInWorldRange(world, Player.class, splinter.getX(), splinter.getY(), splinter.getZ(), TARGET_RANGE);
-			if (foundPlayer == null)
+			if (foundPlayer == null) {
+				// No player in range, calm down if enraged
+				splinter.getEntityData().set(SplinterEntity.DATA_watchTimer, 0);
+				splinter.getEntityData().set(SplinterEntity.DATA_isEnraged, 0);
 				continue;
+			}
 
 			int frozenByRose = splinter.getEntityData().get(SplinterEntity.DATA_frozenByRose);
+			int isEnraged = splinter.getEntityData().get(SplinterEntity.DATA_isEnraged);
+			int watchTimer = splinter.getEntityData().get(SplinterEntity.DATA_watchTimer);
 
 			Vec3 toSplinter = splinter.getEyePosition().subtract(foundPlayer.getEyePosition()).normalize();
 			double dot = foundPlayer.getLookAngle().normalize().dot(toSplinter);
 			boolean facing = dot > WATCH_DOT_THRESHOLD;
-			boolean canSee = foundPlayer.hasLineOfSight(splinter); // clear line of sight
+			boolean canSee = foundPlayer.hasLineOfSight(splinter);
 			boolean isWatched = facing && canSee;
 
-			if (isWatched || frozenByRose == 1) {
+			// Check if player has escaped range to calm rage
+			double distToPlayer = splinter.position().distanceTo(foundPlayer.position());
+			if (isEnraged == 1 && distToPlayer > RAGE_ESCAPE_RANGE) {
+				splinter.getEntityData().set(SplinterEntity.DATA_isEnraged, 0);
+				splinter.getEntityData().set(SplinterEntity.DATA_watchTimer, 0);
+				isEnraged = 0;
+			}
+
+			// Increment or reset watch timer
+			if (isWatched && isEnraged == 0) {
+				watchTimer++;
+				splinter.getEntityData().set(SplinterEntity.DATA_watchTimer, watchTimer);
+				if (watchTimer >= RAGE_WATCH_THRESHOLD) {
+					splinter.getEntityData().set(SplinterEntity.DATA_isEnraged, 1);
+					splinter.getEntityData().set(SplinterEntity.DATA_watchTimer, 0);
+					isEnraged = 1;
+				}
+			} else if (!isWatched && isEnraged == 0) {
+				splinter.getEntityData().set(SplinterEntity.DATA_watchTimer, 0);
+			}
+
+			// Freeze logic - enraged splinter ignores gaze
+			if ((isWatched && isEnraged == 0) || frozenByRose == 1) {
 				setSpeed(splinter, 0);
 				if (splinter instanceof Mob mob) {
 					mob.getNavigation().stop();
@@ -113,6 +129,7 @@ public class SplinterOnEntityTickUpdateProcedure {
 				continue;
 			}
 
+			// Movement
 			splinter.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(foundPlayer.getX(), foundPlayer.getEyeY(), foundPlayer.getZ()));
 			setSpeed(splinter, ACTIVE_MOVE_SPEED);
 
@@ -197,6 +214,8 @@ public class SplinterOnEntityTickUpdateProcedure {
 
 			if (foundRose) {
 				setSpeed(splinter, 0);
+				splinter.getEntityData().set(SplinterEntity.DATA_isEnraged, 0);
+				splinter.getEntityData().set(SplinterEntity.DATA_watchTimer, 0);
 				if (splinter instanceof Mob mob) {
 					mob.getNavigation().stop();
 				}

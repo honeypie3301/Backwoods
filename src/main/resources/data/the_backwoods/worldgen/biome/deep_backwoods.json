@@ -31,18 +31,12 @@
     "monster": [
       {
         "type": "the_backwoods:hollow",
-        "weight": 10,
+        "weight": 2,
         "minCount": 1,
         "maxCount": 1
       },
       {
         "type": "the_backwoods:log_splinter",
-        "weight": 15,
-        "minCount": 1,
-        "maxCount": 1
-      },
-      {
-        "type": "the_backwoods:ash_weaver",
         "weight": 1,
         "minCount": 1,
         "maxCount": 1

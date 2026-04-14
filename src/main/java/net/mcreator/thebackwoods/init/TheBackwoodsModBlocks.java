@@ -29,6 +29,7 @@ public class TheBackwoodsModBlocks {
 	public static final DeferredBlock<Block> ROTTEN_OAK_GATE;
 	public static final DeferredBlock<Block> ROTTEN_OAK_PRESSURE_PLATE;
 	public static final DeferredBlock<Block> PETRIFIED_ROTTEN_OAK_WOOD;
+	public static final DeferredBlock<Block> BLINDSPOT_SPLINTER_SPAWNER;
 	static {
 		BACKWOODS_PORTAL = REGISTRY.register("backwoods_portal", BackwoodsPortalBlock::new);
 		ASH_ROSE = REGISTRY.register("ash_rose", AshRoseBlock::new);
@@ -46,6 +47,7 @@ public class TheBackwoodsModBlocks {
 		ROTTEN_OAK_GATE = REGISTRY.register("rotten_oak_gate", RottenOakGateBlock::new);
 		ROTTEN_OAK_PRESSURE_PLATE = REGISTRY.register("rotten_oak_pressure_plate", RottenOakPressurePlateBlock::new);
 		PETRIFIED_ROTTEN_OAK_WOOD = REGISTRY.register("petrified_rotten_oak_wood", PetrifiedRottenOakWoodBlock::new);
+		BLINDSPOT_SPLINTER_SPAWNER = REGISTRY.register("blindspot_splinter_spawner", BlindspotSplinterSpawnerBlock::new);
 	}
 	// Start of user code block custom blocks
 	// End of user code block custom blocks

@@ -41,7 +41,7 @@ public class LossEscapeTimerProcedure {
 			entity.getPersistentData().putDouble("void_time", (entity.getPersistentData().getDouble("void_time") + 1));
 			if (entity.getPersistentData().getDouble("void_time") >= 7250) {
 				if (entity instanceof ServerPlayer _player && !_player.level().isClientSide()) {
-					ResourceKey<Level> destinationType = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:backwoods"));
+					ResourceKey<Level> destinationType = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:the_grain"));
 					if (_player.level().dimension() == destinationType)
 						return;
 					ServerLevel nextLevel = _player.server.getLevel(destinationType);

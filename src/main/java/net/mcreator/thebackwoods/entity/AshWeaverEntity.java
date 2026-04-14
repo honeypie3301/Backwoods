@@ -62,8 +62,8 @@ public class AshWeaverEntity extends PathfinderMob {
 		this.goalSelector.addGoal(5, new FloatGoal(this));
 		this.goalSelector.addGoal(6, new OpenDoorGoal(this, false));
 		this.goalSelector.addGoal(7, new OpenDoorGoal(this, true));
-		this.targetSelector.addGoal(8, new NearestAttackableTargetGoal(this, SplinterEntity.class, true, true));
-		this.targetSelector.addGoal(9, new NearestAttackableTargetGoal(this, LogSplinterEntity.class, true, true));
+		this.targetSelector.addGoal(8, new NearestAttackableTargetGoal(this, SplinterEntity.class, false, false));
+		this.targetSelector.addGoal(9, new NearestAttackableTargetGoal(this, LogSplinterEntity.class, false, false));
 	}
 
 	@Override

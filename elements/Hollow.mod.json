@@ -145,11 +145,8 @@
     "spawningProbability": 1,
     "mobSpawningType": "monster",
     "minNumberOfMobsPerGroup": 1,
-    "maxNumberOfMobsPerGroup": 2,
+    "maxNumberOfMobsPerGroup": 1,
     "restrictionBiomes": [
-      {
-        "value": "CUSTOM:WoodPlains"
-      },
       {
         "value": "CUSTOM:DeepBackwoods"
       }

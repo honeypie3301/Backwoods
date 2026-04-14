@@ -48,12 +48,12 @@
     "spawnInCaves": false,
     "spawnBiomeNether": false,
     "genTemperature": {
-      "min": 0.5,
+      "min": 0.7,
       "max": 1.0
     },
     "genHumidity": {
       "min": -1.0,
-      "max": -0.35
+      "max": -0.6
     },
     "genContinentalness": {
       "min": 0.3,
@@ -87,13 +87,14 @@
       "Caves",
       "Ores",
       "DeadBushes",
-      "DesertFeatures"
+      "DesertFeatures",
+      "Fossils"
     ],
     "spawnStronghold": false,
     "spawnMineshaft": true,
     "spawnMineshaftMesa": false,
     "spawnPillagerOutpost": false,
-    "villageType": "none",
+    "villageType": "desert",
     "spawnWoodlandMansion": false,
     "spawnJungleTemple": false,
     "spawnDesertPyramid": true,
@@ -109,6 +110,43 @@
     "spawnBastionRemnant": false,
     "spawnEndCity": false,
     "spawnRuinedPortal": "NONE",
-    "spawnEntries": []
+    "spawnEntries": [
+      {
+        "entity": {
+          "value": "EntityHusk"
+        },
+        "minGroup": 1,
+        "maxGroup": 2,
+        "weight": 85,
+        "spawnType": "monster"
+      },
+      {
+        "entity": {
+          "value": "EntityRabbit"
+        },
+        "minGroup": 2,
+        "maxGroup": 3,
+        "weight": 20,
+        "spawnType": "creature"
+      },
+      {
+        "entity": {
+          "value": "EntityCamel"
+        },
+        "minGroup": 1,
+        "maxGroup": 1,
+        "weight": 3,
+        "spawnType": "creature"
+      },
+      {
+        "entity": {
+          "value": "EntityGlowSquid"
+        },
+        "minGroup": 4,
+        "maxGroup": 6,
+        "weight": 1,
+        "spawnType": "undergroundWaterCreature"
+      }
+    ]
   }
 }

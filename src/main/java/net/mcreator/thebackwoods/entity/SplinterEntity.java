@@ -50,6 +50,8 @@ public class SplinterEntity extends Monster {
 	public static final EntityDataAccessor<Integer> DATA_buildProgress = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
 	public static final EntityDataAccessor<Integer> DATA_frozenByRose = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
 	public static final EntityDataAccessor<Integer> DATA_scan_timer = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<Integer> DATA_watchTimer = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<Integer> DATA_isEnraged = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
 
 	public SplinterEntity(EntityType<SplinterEntity> type, Level world) {
 		super(type, world);
@@ -67,6 +69,8 @@ public class SplinterEntity extends Monster {
 		builder.define(DATA_buildProgress, 0);
 		builder.define(DATA_frozenByRose, 0);
 		builder.define(DATA_scan_timer, 0);
+		builder.define(DATA_watchTimer, 0);
+		builder.define(DATA_isEnraged, 0);
 	}
 
 	@Override
@@ -151,6 +155,8 @@ public class SplinterEntity extends Monster {
 		compound.putInt("DatabuildProgress", this.entityData.get(DATA_buildProgress));
 		compound.putInt("DatafrozenByRose", this.entityData.get(DATA_frozenByRose));
 		compound.putInt("Datascan_timer", this.entityData.get(DATA_scan_timer));
+		compound.putInt("DatawatchTimer", this.entityData.get(DATA_watchTimer));
+		compound.putInt("DataisEnraged", this.entityData.get(DATA_isEnraged));
 	}
 
 	@Override
@@ -170,6 +176,10 @@ public class SplinterEntity extends Monster {
 			this.entityData.set(DATA_frozenByRose, compound.getInt("DatafrozenByRose"));
 		if (compound.contains("Datascan_timer"))
 			this.entityData.set(DATA_scan_timer, compound.getInt("Datascan_timer"));
+		if (compound.contains("DatawatchTimer"))
+			this.entityData.set(DATA_watchTimer, compound.getInt("DatawatchTimer"));
+		if (compound.contains("DataisEnraged"))
+			this.entityData.set(DATA_isEnraged, compound.getInt("DataisEnraged"));
 	}
 
 	@Override
