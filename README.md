@@ -12,7 +12,7 @@
 
 The Backwoods adds a dark new dimension to Minecraft built from oak wood.
 
-To enter, build a portal from oak planks and light it with a Flint and Charcoal.
+To enter, build a portal from oak planks and light it with a Steel and Charcoal.
 
 Inside, you'll find Splinters, hostile, humanoid creatures made of oak plank that relentlessly pursue you. They mine through walls, build bridges, and climb to reach you. But stare them down and they freeze completely. Look away for even a second and they're moving again.
 
