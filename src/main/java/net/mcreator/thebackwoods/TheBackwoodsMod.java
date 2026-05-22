@@ -35,6 +35,7 @@ public class TheBackwoodsMod {
 
 	public TheBackwoodsMod(IEventBus modEventBus) {
 		// Start of user code block mod constructor
+		net.mcreator.thebackwoods.init.ModFeatures.register(modEventBus);
 		// End of user code block mod constructor
 		NeoForge.EVENT_BUS.register(this);
 		modEventBus.addListener(this::registerNetworking);

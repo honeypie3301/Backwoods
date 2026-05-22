@@ -7,7 +7,6 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Explosion;
-import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
@@ -39,7 +38,7 @@ public class HollowEntity extends Monster {
 	@Override
 	protected void registerGoals() {
 		super.registerGoals();
-		this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, (float) 64));
+		this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, (float) 256));
 	}
 
 	@Override
@@ -78,8 +77,6 @@ public class HollowEntity extends Monster {
 		Entity immediatesourceentity = damagesource.getDirectEntity();
 
 		HollowEntityIsHurtProcedure.execute(world, x, y, z, entity, sourceentity);
-		if (damagesource.getDirectEntity() instanceof AbstractArrow)
-			return false;
 		if (damagesource.is(DamageTypes.DROWN))
 			return false;
 		if (damagesource.is(DamageTypes.EXPLOSION) || damagesource.is(DamageTypes.PLAYER_EXPLOSION))

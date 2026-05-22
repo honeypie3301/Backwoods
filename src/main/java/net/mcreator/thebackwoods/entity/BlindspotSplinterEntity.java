@@ -12,7 +12,6 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.projectile.ThrownPotion;
-import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
@@ -38,6 +37,7 @@ import net.minecraft.core.BlockPos;
 import net.mcreator.thebackwoods.procedures.SplinterOnInitialEntitySpawnProcedure;
 import net.mcreator.thebackwoods.procedures.BlindspotSplinterOnEntityTickUpdateProcedure;
 import net.mcreator.thebackwoods.procedures.BlindspotSplinterNaturalEntitySpawningConditionProcedure;
+import net.mcreator.thebackwoods.procedures.BlindspotSplinterItIsStruckByLightningProcedure;
 import net.mcreator.thebackwoods.init.TheBackwoodsModEntities;
 
 import javax.annotation.Nullable;
@@ -52,6 +52,7 @@ public class BlindspotSplinterEntity extends Monster {
 	public static final EntityDataAccessor<Integer> DATA_scan_timer = SynchedEntityData.defineId(BlindspotSplinterEntity.class, EntityDataSerializers.INT);
 	public static final EntityDataAccessor<Integer> DATA_watchTimer = SynchedEntityData.defineId(BlindspotSplinterEntity.class, EntityDataSerializers.INT);
 	public static final EntityDataAccessor<Integer> DATA_isEnraged = SynchedEntityData.defineId(BlindspotSplinterEntity.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<Integer> DATA_Age = SynchedEntityData.defineId(BlindspotSplinterEntity.class, EntityDataSerializers.INT);
 
 	public BlindspotSplinterEntity(EntityType<BlindspotSplinterEntity> type, Level world) {
 		super(type, world);
@@ -71,6 +72,7 @@ public class BlindspotSplinterEntity extends Monster {
 		builder.define(DATA_scan_timer, 0);
 		builder.define(DATA_watchTimer, 0);
 		builder.define(DATA_isEnraged, 0);
+		builder.define(DATA_Age, 0);
 	}
 
 	@Override
@@ -85,7 +87,7 @@ public class BlindspotSplinterEntity extends Monster {
 		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal(this, Player.class, true, false));
 		this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, AshWeaverEntity.class, true, false));
 		this.goalSelector.addGoal(4, new RandomStrollGoal(this, 0.8));
-		this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, (float) 32));
+		this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, (float) 128));
 	}
 
 	@Override
@@ -119,9 +121,13 @@ public class BlindspotSplinterEntity extends Monster {
 	}
 
 	@Override
+	public void thunderHit(ServerLevel serverWorld, LightningBolt lightningBolt) {
+		super.thunderHit(serverWorld, lightningBolt);
+		BlindspotSplinterItIsStruckByLightningProcedure.execute(this.level(), this.getX(), this.getY(), this.getZ(), this);
+	}
+
+	@Override
 	public boolean hurt(DamageSource damagesource, float amount) {
-		if (damagesource.getDirectEntity() instanceof AbstractArrow)
-			return false;
 		if (damagesource.getDirectEntity() instanceof ThrownPotion || damagesource.getDirectEntity() instanceof AreaEffectCloud || damagesource.typeHolder().is(NeoForgeMod.POISON_DAMAGE))
 			return false;
 		if (damagesource.is(DamageTypes.CACTUS))
@@ -152,6 +158,7 @@ public class BlindspotSplinterEntity extends Monster {
 		compound.putInt("Datascan_timer", this.entityData.get(DATA_scan_timer));
 		compound.putInt("DatawatchTimer", this.entityData.get(DATA_watchTimer));
 		compound.putInt("DataisEnraged", this.entityData.get(DATA_isEnraged));
+		compound.putInt("DataAge", this.entityData.get(DATA_Age));
 	}
 
 	@Override
@@ -175,6 +182,8 @@ public class BlindspotSplinterEntity extends Monster {
 			this.entityData.set(DATA_watchTimer, compound.getInt("DatawatchTimer"));
 		if (compound.contains("DataisEnraged"))
 			this.entityData.set(DATA_isEnraged, compound.getInt("DataisEnraged"));
+		if (compound.contains("DataAge"))
+			this.entityData.set(DATA_Age, compound.getInt("DataAge"));
 	}
 
 	@Override
@@ -208,7 +217,7 @@ public class BlindspotSplinterEntity extends Monster {
 			int x = pos.getX();
 			int y = pos.getY();
 			int z = pos.getZ();
-			return BlindspotSplinterNaturalEntitySpawningConditionProcedure.execute();
+			return BlindspotSplinterNaturalEntitySpawningConditionProcedure.execute(world, x, y, z);
 		}, RegisterSpawnPlacementsEvent.Operation.REPLACE);
 	}
 

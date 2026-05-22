@@ -22,7 +22,7 @@ public class TheFamiliarDimension {
 		double y = entity.getY();
 		double z = entity.getZ();
 		if (event.getTo() == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:the_familiar"))) {
-			TheFamiliarPlayerEntersDimensionProcedure.execute(world, entity);
+			TheFamiliarPlayerEntersDimensionProcedure.execute(world, x, y, z, entity);
 		}
 	}
 }

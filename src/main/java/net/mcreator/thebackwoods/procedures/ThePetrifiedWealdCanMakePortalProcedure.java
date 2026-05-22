@@ -3,6 +3,7 @@ package net.mcreator.thebackwoods.procedures;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.util.RandomSource;
@@ -26,7 +27,17 @@ public class ThePetrifiedWealdCanMakePortalProcedure {
 		double roll = 0;
 		if ((entity instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == TheBackwoodsModItems.THE_PETRIFIED_WEALD.get()
 				|| (entity instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY).getItem() == TheBackwoodsModItems.THE_PETRIFIED_WEALD.get()) {
-			itemstack.shrink(1);
+			if (!(entity instanceof Player _plr ? _plr.getAbilities().instabuild : false)) {
+				if (world instanceof ServerLevel _level) {
+					itemstack.hurtAndBreak(16, _level, null, _stkprov -> {
+					});
+				}
+			} else {
+				if (world instanceof ServerLevel _level) {
+					itemstack.hurtAndBreak(0, _level, null, _stkprov -> {
+					});
+				}
+			}
 			if ((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:backwoods"))) {
 				successNeeded = 7;
 			} else if ((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:the_petrified_weald"))) {
@@ -38,7 +49,7 @@ public class ThePetrifiedWealdCanMakePortalProcedure {
 			} else if ((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:the_still"))) {
 				successNeeded = 8;
 			} else if ((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:the_familiar"))) {
-				successNeeded = 2;
+				successNeeded = 1;
 			} else if ((entity.level().dimension()) == Level.OVERWORLD) {
 				successNeeded = 9;
 			} else {

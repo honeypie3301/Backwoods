@@ -4,14 +4,16 @@
   "downfall": 0.8,
   "effects": {
     "mood_sound": {
-      "sound": "the_backwoods:still_mood3",
+      "sound": "the_backwoods:familiar_mood2",
       "tick_delay": 6000,
       "offset": 8,
       "block_search_extent": 2
     },
-    "additions_sound": {
-      "sound": "the_backwoods:familiar_ambient_2",
-      "tick_chance": 0.0111
+    "music": {
+      "sound": "the_backwoods:familiar_mood5",
+      "min_delay": 12000,
+      "max_delay": 24000,
+      "replace_current_music": true
     },
     "foliage_color": -10899920,
     "grass_color": -8798118,

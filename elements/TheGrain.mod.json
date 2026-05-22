@@ -16,7 +16,10 @@
         "value": "CUSTOM:PillarThicket"
       },
       {
-        "value": "CUSTOM:ThePartitionedGrain"
+        "value": "CUSTOM:FracturedBarrens"
+      },
+      {
+        "value": "CUSTOM:LabyrinthineGrids"
       }
     ],
     "worldGenType": "Normal world gen",

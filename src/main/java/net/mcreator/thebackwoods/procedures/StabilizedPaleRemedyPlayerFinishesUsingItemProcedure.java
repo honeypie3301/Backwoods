@@ -11,8 +11,7 @@ public class StabilizedPaleRemedyPlayerFinishesUsingItemProcedure {
 	public static void execute(Entity entity) {
 		if (entity == null)
 			return;
-		entity.getPersistentData().putDouble("backwoods_time", (Math.min(99999, Math.max(entity.getPersistentData().getDouble("backwoods_time") - 5000, 0))));
-		entity.getPersistentData().putDouble("still_time", (Math.min(99999, Math.max(entity.getPersistentData().getDouble("still_time") - 5000, 0))));
+		entity.getPersistentData().putDouble("backwoods_time", (entity.getPersistentData().getDouble("backwoods_time") - 5000));
 		if (entity instanceof Player _player) {
 			ItemStack _setstack = new ItemStack(Items.BOWL).copy();
 			_setstack.setCount(1);

@@ -46,7 +46,7 @@ public class HollowOnEntityTickUpdateProcedure {
 				if (!world.canSeeSkyFromBelowWater(
 						BlockPos.containing((findEntityInWorldRange(world, Player.class, x, y, z, 32)).getX(), (findEntityInWorldRange(world, Player.class, x, y, z, 32)).getY(), (findEntityInWorldRange(world, Player.class, x, y, z, 32)).getZ()))) {
 					if (Mth.nextInt(RandomSource.create(), 1, 190) < 2) {
-						if (!((findEntityInWorldRange(world, Player.class, x, y, z, 32)) == null)) {
+						if (findEntityInWorldRange(world, Player.class, x, y, z, 32) != null) {
 							foundPlayer = findEntityInWorldRange(world, Player.class, x, y, z, 32);
 							offsetX = Mth.nextInt(RandomSource.create(), -3, 3);
 							offsetZ = Mth.nextInt(RandomSource.create(), -3, 3);

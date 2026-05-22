@@ -106,7 +106,7 @@ public class ItemCorruptionProcedure {
 								_modHandler.setStackInSlot((int) slot, _setstack);
 							}
 						}
-						if (itemstackiterator.is(ItemTags.create(ResourceLocation.parse("minecraft:fade_blocks")))) {
+						if (itemstackiterator.is(ItemTags.create(ResourceLocation.parse("the_backwoods:fade_blocks")))) {
 							itemCount = itemstackiterator.getCount();
 							if (entity.getCapability(Capabilities.ItemHandler.ENTITY, null) instanceof IItemHandlerModifiable _modHandler) {
 								ItemStack _setstack = new ItemStack(TheBackwoodsModBlocks.FADED_BLOCK.get()).copy();

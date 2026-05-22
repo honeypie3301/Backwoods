@@ -28,13 +28,13 @@
       "value": ""
     },
     "additionsSound": {
-      "value": "CUSTOM:familiar_ambient_2"
-    },
-    "music": {
       "value": ""
     },
+    "music": {
+      "value": "CUSTOM:familiar_mood5"
+    },
     "moodSound": {
-      "value": "CUSTOM:still_mood3"
+      "value": "CUSTOM:familiar_mood2"
     },
     "moodSoundDelay": 6000,
     "spawnParticles": false,

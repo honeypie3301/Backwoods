@@ -20,7 +20,7 @@ public class PlaqueHeartBlockDestroyedByPlayerProcedure {
 			return;
 		double roll = 0;
 		roll = Mth.nextDouble(RandomSource.create(), 0, 1);
-		entity.getPersistentData().putDouble("void_time", (Math.min(99999, Math.max(0, entity.getPersistentData().getDouble("void_time") - 1000))));
+		entity.getPersistentData().putDouble("void_time", (entity.getPersistentData().getDouble("void_time") - 1000));
 		if (roll < 0.65) {
 			if (world instanceof ServerLevel _level) {
 				ItemEntity entityToSpawn = new ItemEntity(_level, x, y, z, new ItemStack(TheBackwoodsModItems.MEMORY_FRAGMENT.get()));

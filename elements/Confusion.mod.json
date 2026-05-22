@@ -20,6 +20,22 @@
       "value": -11909824,
       "falpha": 0.0
     },
+    "grassColor": {
+      "value": -9079435,
+      "falpha": 0.0
+    },
+    "foliageColor": {
+      "value": -9079435,
+      "falpha": 0.0
+    },
+    "waterColor": {
+      "value": -15132391,
+      "falpha": 0.0
+    },
+    "waterFogColor": {
+      "value": -15658735,
+      "falpha": 0.0
+    },
     "ambientSound": {
       "value": "CUSTOM:degradation_r1"
     },

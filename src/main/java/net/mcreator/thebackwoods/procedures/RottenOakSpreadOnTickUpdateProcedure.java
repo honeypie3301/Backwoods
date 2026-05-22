@@ -10,7 +10,7 @@ import net.mcreator.thebackwoods.init.TheBackwoodsModBlocks;
 
 public class RottenOakSpreadOnTickUpdateProcedure {
 	public static void execute(LevelAccessor world, double x, double y, double z) {
-		if (Math.random() < (1) / ((float) 1.5)) {
+		if (Math.random() < 0.6) {
 			if ((world.getBlockState(BlockPos.containing(x + 1, y, z))).getBlock() == Blocks.OAK_PLANKS) {
 				{
 					BlockPos _bp = BlockPos.containing(x + 1, y, z);
@@ -41,7 +41,7 @@ public class RottenOakSpreadOnTickUpdateProcedure {
 					}
 					world.setBlock(_bp, _bs, 3);
 				}
-			} else if ((world.getBlockState(BlockPos.containing(x, y + 1, z))).getBlock() == Blocks.OAK_PLANKS && Math.random() < (1) / ((float) 8)) {
+			} else if ((world.getBlockState(BlockPos.containing(x, y + 1, z))).getBlock() == Blocks.OAK_PLANKS && Math.random() < 0.125) {
 				{
 					BlockPos _bp = BlockPos.containing(x, y - 1, z);
 					BlockState _bs = TheBackwoodsModBlocks.ROTTEN_OAK_PLANKS.get().defaultBlockState();
@@ -56,7 +56,7 @@ public class RottenOakSpreadOnTickUpdateProcedure {
 					}
 					world.setBlock(_bp, _bs, 3);
 				}
-			} else if ((world.getBlockState(BlockPos.containing(x, y - 1, z))).getBlock() == Blocks.OAK_PLANKS && Math.random() < (1) / ((float) 7)) {
+			} else if ((world.getBlockState(BlockPos.containing(x, y - 1, z))).getBlock() == Blocks.OAK_PLANKS && Math.random() < 0.125) {
 				{
 					BlockPos _bp = BlockPos.containing(x, y - 1, z);
 					BlockState _bs = TheBackwoodsModBlocks.ROTTEN_OAK_PLANKS.get().defaultBlockState();

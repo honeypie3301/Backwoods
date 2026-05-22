@@ -58,15 +58,15 @@ public class RotEntityIsHurtProcedure {
 		if (entity instanceof RotEntity) {
 			attacker = (entity instanceof LivingEntity _entity) ? _entity.getLastHurtByMob() : null;
 			foundPlayer = findEntityInWorldRange(world, Player.class, x, y, z, 64);
-			if (!(attacker == null)) {
+			if (attacker != null) {
 				if (hasEntityInInventory(attacker, new ItemStack(Items.TOTEM_OF_UNDYING)) || (attacker instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == Items.TOTEM_OF_UNDYING
 						|| (attacker instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY).getItem() == Items.TOTEM_OF_UNDYING) {
-					if (Math.random() < (1) / ((float) 250)) {
+					if (Math.random() < 0.004) {
 						if (attacker instanceof Player _player && !_player.level().isClientSide())
 							_player.displayClientMessage(Component.literal("I see the false life you clutch."), true);
 					}
 					if ((attacker.position()).distanceTo((entity.position())) > 1) {
-						if (Math.random() < (1) / ((float) 15)) {
+						if (Math.random() < 0.067) {
 							{
 								Entity _ent = entity;
 								_ent.teleportTo((attacker.getX() - attacker.getLookAngle().x * 2),
@@ -82,7 +82,7 @@ public class RotEntityIsHurtProcedure {
 								for (Entity entityiterator : world.getEntitiesOfClass(Entity.class, new AABB(_center, _center).inflate(16 / 2d), e -> true).stream().sorted(Comparator.comparingDouble(_entcnd -> _entcnd.distanceToSqr(_center)))
 										.toList()) {
 									if (!(entityiterator instanceof RotEntity)) {
-										entityiterator.hurt(new DamageSource(world.holderOrThrow(DamageTypes.SONIC_BOOM)), 10);
+										entityiterator.hurt(new DamageSource(world.holderOrThrow(DamageTypes.SONIC_BOOM)), 15);
 										entityiterator.setDeltaMovement(new Vec3((((entityiterator.getX() - entity.getX()) / (entityiterator.position()).distanceTo((entity.position()))) * 2), 0.6,
 												(((entityiterator.getZ() - entity.getZ()) / (entityiterator.position()).distanceTo((entity.position()))) * 2)));
 									}

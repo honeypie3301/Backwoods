@@ -21,7 +21,89 @@
     "boundingBoxScale": {
       "fixedValue": 1.0
     },
-    "modelLayers": [],
+    "modelLayers": [
+      {
+        "model": "Default",
+        "texture": "rot_stage_0.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "BlindspotSplinterDisplayCondition"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "rot_stage_1.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "BlindspotSplinterDisplayCondition2"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "rot_stage_2.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "BlindspotSplinterDisplayCondition3"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "rot_stage_3.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "BlindspotSplinterDisplayCondition4"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "rot_stage_4.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "BlindspotSplinterDisplayCondition5"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "rot_stage_5.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "BlindspotSplinterDisplayCondition6"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "rot_stage_6.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "BlindspotSplinterDisplayCondition7"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "rot_stage_7.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "BlindspotSplinterDisplayCondition8"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "rot_biped_base.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "BlindspotSplinterDisplayCondition9"
+        }
+      }
+    ],
     "animations": [],
     "modelWidth": 0.6,
     "modelHeight": 1.8,
@@ -90,7 +172,7 @@
     "canControlForward": false,
     "canControlStrafe": false,
     "immuneToFire": false,
-    "immuneToArrows": true,
+    "immuneToArrows": false,
     "immuneToFallDamage": false,
     "immuneToCactus": true,
     "immuneToDrowning": true,
@@ -183,8 +265,18 @@
         "name": "isEnraged",
         "type": "integer",
         "value": 0
+      },
+      {
+        "min": -2147483648,
+        "max": 2147483647,
+        "name": "Age",
+        "type": "integer",
+        "value": 0
       }
     ],
+    "onStruckByLightning": {
+      "name": "BlindspotSplinterItIsStruckByLightning"
+    },
     "onMobTickUpdate": {
       "name": "BlindspotSplinterOnEntityTickUpdate"
     },
@@ -193,7 +285,7 @@
     },
     "hasAI": true,
     "aiBase": "(none)",
-    "aixml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"aitasks_container\" inline=\"true\" deletable=\"false\" x=\"40\" y=\"40\"><next><block type=\"attack_on_collide\"><field name=\"speed\">1.325</field><field name=\"longmemory\">TRUE</field><field name=\"condition\">null,null</field><next><block type=\"attack_entity\"><field name=\"insight\">TRUE</field><field name=\"nearby\">FALSE</field><field name=\"entity\">EntityPlayer</field><field name=\"condition\">null,null</field><next><block type=\"attack_entity\"><field name=\"insight\">TRUE</field><field name=\"nearby\">FALSE</field><field name=\"entity\">CUSTOM:AshWeaver</field><field name=\"condition\">null,null</field><next><block type=\"wander\"><field name=\"speed\">0.8</field><field name=\"condition\">null,null</field><next><block type=\"watch_closest_entity\"><field name=\"entity\">EntityPlayer</field><field name=\"radius\">32</field><field name=\"condition\">null,null</field></block></next></block></next></block></next></block></next></block></next></block></xml>",
+    "aixml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"aitasks_container\" inline=\"true\" deletable=\"false\" x=\"40\" y=\"40\"><next><block type=\"attack_on_collide\"><field name=\"speed\">1.325</field><field name=\"longmemory\">TRUE</field><field name=\"condition\">null,null</field><next><block type=\"attack_entity\"><field name=\"insight\">TRUE</field><field name=\"nearby\">FALSE</field><field name=\"entity\">EntityPlayer</field><field name=\"condition\">null,null</field><next><block type=\"attack_entity\"><field name=\"insight\">TRUE</field><field name=\"nearby\">FALSE</field><field name=\"entity\">CUSTOM:AshWeaver</field><field name=\"condition\">null,null</field><next><block type=\"wander\"><field name=\"speed\">0.8</field><field name=\"condition\">null,null</field><next><block type=\"watch_closest_entity\"><field name=\"entity\">EntityPlayer</field><field name=\"radius\">128</field><field name=\"condition\">null,null</field></block></next></block></next></block></next></block></next></block></next></block></xml>",
     "breedable": false,
     "tameable": false,
     "breedTriggerItems": [],
@@ -212,10 +304,16 @@
     "spawningProbability": 1,
     "mobSpawningType": "monster",
     "minNumberOfMobsPerGroup": 1,
-    "maxNumberOfMobsPerGroup": 17,
+    "maxNumberOfMobsPerGroup": 1,
     "restrictionBiomes": [
       {
-        "value": "CUSTOM:SplinterNest"
+        "value": "CUSTOM:UniformGrain"
+      },
+      {
+        "value": "CUSTOM:LabyrinthineGrids"
+      },
+      {
+        "value": "CUSTOM:PillarThicket"
       }
     ],
     "spawnInDungeons": false,

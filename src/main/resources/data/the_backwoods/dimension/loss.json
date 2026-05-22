@@ -21,7 +21,7 @@
     },
     "settings": {
       "name": "the_backwoods:loss",
-      "sea_level": 15,
+      "sea_level": 40,
       "legacy_random_source": false,
       "disable_mob_generation": false,
       "aquifers_enabled": true,

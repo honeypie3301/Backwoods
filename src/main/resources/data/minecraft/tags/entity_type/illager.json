@@ -2,9 +2,11 @@
   "replace": false,
   "values": [
     "the_backwoods:ash_weaver",
+    "the_backwoods:stilt_walker",
     "the_backwoods:splinter",
     "the_backwoods:log_splinter",
     "the_backwoods:petrified_log_splinter",
+    "the_backwoods:lignum_gigas",
     "the_backwoods:blindspot_splinter",
     "the_backwoods:rot",
     "the_backwoods:hollow"

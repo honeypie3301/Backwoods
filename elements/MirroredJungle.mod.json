@@ -25,16 +25,16 @@
       "falpha": 0.0
     },
     "ambientSound": {
-      "value": "CUSTOM:still_ambient2"
+      "value": ""
     },
     "additionsSound": {
       "value": ""
     },
     "music": {
-      "value": "CUSTOM:still_music2"
+      "value": "CUSTOM:familiar_mood2"
     },
     "moodSound": {
-      "value": "CUSTOM:still_mood"
+      "value": "CUSTOM:familiar_mood5"
     },
     "moodSoundDelay": 6000,
     "spawnParticles": false,
