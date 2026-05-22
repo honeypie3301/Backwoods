@@ -47,6 +47,8 @@ public class TheBackwoodsModTabs {
 			tabData.accept(TheBackwoodsModItems.ROT_SPAWN_EGG.get());
 			tabData.accept(TheBackwoodsModItems.BLINDSPOT_SPLINTER_SPAWN_EGG.get());
 			tabData.accept(TheBackwoodsModItems.PETRIFIED_LOG_SPLINTER_SPAWN_EGG.get());
+			tabData.accept(TheBackwoodsModItems.STILT_WALKER_SPAWN_EGG.get());
+			tabData.accept(TheBackwoodsModItems.LIGNUM_GIGAS_SPAWN_EGG.get());
 		} else if (tabData.getTabKey() == CreativeModeTabs.NATURAL_BLOCKS) {
 			tabData.accept(TheBackwoodsModBlocks.ASH_ROSE.get().asItem());
 			tabData.accept(TheBackwoodsModBlocks.FADED_BLOCK.get().asItem());
@@ -70,6 +72,8 @@ public class TheBackwoodsModTabs {
 			tabData.accept(TheBackwoodsModBlocks.NULLSTONE_WALL.get().asItem());
 			tabData.accept(TheBackwoodsModBlocks.COBBLED_NULLSTONE_STAIR.get().asItem());
 			tabData.accept(TheBackwoodsModBlocks.COBBLED_NULLSTONE_WALL.get().asItem());
+			tabData.accept(TheBackwoodsModBlocks.SCANDERE_LIGNUM.get().asItem());
+			tabData.accept(TheBackwoodsModBlocks.SCANDERE_LIGNUM_LOG.get().asItem());
 		} else if (tabData.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
 			tabData.accept(TheBackwoodsModBlocks.FADED_BLOCK.get().asItem());
 			tabData.accept(TheBackwoodsModBlocks.PLAQUE.get().asItem());

@@ -8,14 +8,21 @@ import net.neoforged.bus.api.Event;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.ambient.AmbientCreature;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.effect.MobEffects;
@@ -25,11 +32,13 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.Mth;
+import net.minecraft.tags.TagKey;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.BlockPos;
@@ -40,9 +49,46 @@ import net.mcreator.thebackwoods.entity.RotEntity;
 import javax.annotation.Nullable;
 
 import java.util.Comparator;
+import java.util.List;
 
 @EventBusSubscriber
 public class RotOnEntityTickUpdateProcedure {
+	private static final double TARGET_RANGE = 64.0;
+	private static final double TELEPORT_MIN_GAP = 4.0;
+	private static final double TELEPORT_BACK_OFFSET = 2.6;
+	private static final double TELEPORT_SIDE_MIN = 1.6;
+	private static final double TELEPORT_SIDE_MAX = 3.0;
+	private static final double TELEPORT_MAX_VERTICAL_DIFF = 6.0;
+
+	private static final int TP_DODGE_CD = 28;
+	private static final int TP_FLANK_CD = 42;
+	private static final int TP_COMBO_CD = 14;
+	private static final int SONIC_CD = 145;
+	private static final int SONIC_WINDUP_TICKS = 18;
+
+	private static final double DODGE_TRIGGER_DIST = 5.8;
+	private static final double DODGE_SWING_CHANCE = 0.72;
+	private static final double FLANK_CHANCE = 0.22;
+	private static final double BURST_CHANCE_LOW_HP = 0.012;
+
+	private static final int MINE_REACH = 2;
+	private static final int MINE_HEIGHT = 3;
+	private static final int MINE_HALF_WIDTH = 1;
+	private static final float MAX_BREAKABLE_HARDNESS = 60f;
+
+	private static final String K_WOODBOUND = "the_backwoods:woodbound_entities";
+
+	private static final String K_TP_DODGE_CD = "rot_tp_dodge_cd";
+	private static final String K_TP_FLANK_CD = "rot_tp_flank_cd";
+	private static final String K_TP_COMBO_CD = "rot_tp_combo_cd";
+	private static final String K_SONIC_CD = "rot_sonic_cd";
+	private static final String K_SONIC_WINDUP = "rot_sonic_windup";
+	private static final String K_CREATIVE_MSG = "creative_msg_fired";
+	private static final String K_AGE = "Age";
+	private static final String K_ENRAGED = "rot_enraged";
+	private static final String K_CRITICAL = "rot_critical";
+	private static final String K_FLIGHT_TIMER = "rot_flight_timer";
+
 	@SubscribeEvent
 	public static void onEntityTick(EntityTickEvent.Pre event) {
 		execute(event, event.getEntity().level(), event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getEntity());
@@ -53,300 +99,418 @@ public class RotOnEntityTickUpdateProcedure {
 	}
 
 	private static void execute(@Nullable Event event, LevelAccessor world, double x, double y, double z, Entity entity) {
-		if (entity == null)
+		if (!(entity instanceof RotEntity)) return;
+
+		tickCooldown(entity, K_TP_DODGE_CD, 1);
+		tickCooldown(entity, K_TP_FLANK_CD, 1);
+		tickCooldown(entity, K_TP_COMBO_CD, 1);
+		tickCooldown(entity, K_SONIC_CD, 1);
+
+		Entity combatTarget = acquireTarget(world, entity, x, y, z);
+		if (combatTarget == null) {
+			handlePhaseModifiers(entity);
+			handlePassengerAndGrowth(entity);
 			return;
-		Entity foundPlayer = null;
-		double loop = 0;
-		double particleAmount = 0;
-		double xRadius = 0;
-		double zRadius = 0;
-		double yRadius = 0;
-		double masterRadius = 0;
-		if (entity instanceof RotEntity) {
-			foundPlayer = findEntityInWorldRange(world, Player.class, x, y, z, 64);
-			if ((entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_sonicCooldown) : 0) > 0) {
-				if (entity instanceof RotEntity _datEntSetI)
-					_datEntSetI.getEntityData().set(RotEntity.DATA_sonicCooldown, (int) ((entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_sonicCooldown) : 0) - 1));
+		}
+
+		if (combatTarget instanceof Player p && p.getAbilities().instabuild && entity.getPersistentData().getDouble(K_CREATIVE_MSG) == 0) {
+			if (!p.level().isClientSide()) p.displayClientMessage(Component.literal("You observe. It observes back."), true);
+			entity.getPersistentData().putDouble(K_CREATIVE_MSG, 1);
+			handlePhaseModifiers(entity);
+			handlePassengerAndGrowth(entity);
+			return;
+		}
+
+		lockLookAtTarget(entity, combatTarget);
+
+		int windup = (int) entity.getPersistentData().getDouble(K_SONIC_WINDUP);
+		if (windup > 0) {
+			entity.getPersistentData().putDouble(K_SONIC_WINDUP, windup - 1);
+			entity.setDeltaMovement(entity.getDeltaMovement().x() * 0.15, entity.getDeltaMovement().y(), entity.getDeltaMovement().z() * 0.15);
+
+			if (world instanceof ServerLevel s && entity.tickCount % 3 == 0) {
+				s.sendParticles(ParticleTypes.SOUL, entity.getX(), entity.getY() + 1.8, entity.getZ(), 10, 0.45, 0.35, 0.45, 0.01);
 			}
-			if (!(foundPlayer == null)) {
-				if ((foundPlayer instanceof Player _plr ? _plr.getAbilities().instabuild : false) && entity.getPersistentData().getDouble("creative_msg_fired") == 0) {
-					if (foundPlayer instanceof Player _player && !_player.level().isClientSide())
-						_player.displayClientMessage(Component.literal("You observe. It observes back."), true);
-					entity.getPersistentData().putDouble("creative_msg_fired", 1);
-				}
-				if (!(foundPlayer instanceof Player _plr ? _plr.getAbilities().instabuild : false)) {
-					if (entity instanceof LivingEntity _livingEntity12 && _livingEntity12.getAttributes().hasAttribute(Attributes.MOVEMENT_SPEED))
-						_livingEntity12.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(
-								((foundPlayer instanceof LivingEntity _livingEntity11 && _livingEntity11.getAttributes().hasAttribute(Attributes.MOVEMENT_SPEED) ? _livingEntity11.getAttribute(Attributes.MOVEMENT_SPEED).getBaseValue() : 0) + 0.32));
-					if (Mth.nextDouble(RandomSource.create(), 0, 1) < 0.3) {
-						entity.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3((foundPlayer.getX()), (foundPlayer.getY() + 0.8), (foundPlayer.getZ())));
-					}
-					if ((foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getArmorValue() : 0) >= 16 || foundPlayer instanceof LivingEntity _livEnt19 && _livEnt19.isFallFlying()
-							|| hasEntityInInventory(foundPlayer, new ItemStack(Items.TOTEM_OF_UNDYING)) || (foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == Items.TOTEM_OF_UNDYING
-							|| (foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY).getItem() == Items.TOTEM_OF_UNDYING
-							|| (foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == Items.NETHERITE_SWORD
-							|| (foundPlayer instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == Items.NETHERITE_AXE) {
-						if ((foundPlayer.position()).distanceTo((entity.position())) < 5) {
-							if (Mth.nextDouble(RandomSource.create(), 0, 1) < 0.075) {
-								if (foundPlayer instanceof LivingEntity _livEnt33 && _livEnt33.swinging) {
-									entity.getPersistentData().putDouble("dodge_x", (entity.getX() + Mth.nextDouble(RandomSource.create(), 1, 3)));
-									entity.getPersistentData().putDouble("dodge_z", (entity.getZ() + Mth.nextDouble(RandomSource.create(), 1, 3)));
-									{
-										Entity _ent = entity;
-										_ent.teleportTo((entity.getPersistentData().getDouble("dodge_x")), (entity.getY()), (entity.getPersistentData().getDouble("dodge_z")));
-										if (_ent instanceof ServerPlayer _serverPlayer)
-											_serverPlayer.connection.teleport((entity.getPersistentData().getDouble("dodge_x")), (entity.getY()), (entity.getPersistentData().getDouble("dodge_z")), _ent.getYRot(), _ent.getXRot());
-									}
-								}
-							}
-						}
-						if (Math.random() < (1) / ((float) 111)) {
-							if ((foundPlayer.position()).distanceTo((entity.position())) > 4) {
-								if (foundPlayer.getY() - world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) (foundPlayer.getX() - foundPlayer.getLookAngle().x * 2), (int) (foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2)) < 6) {
-									{
-										Entity _ent = entity;
-										_ent.teleportTo((foundPlayer.getX() - foundPlayer.getLookAngle().x * 2),
-												(world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) (foundPlayer.getX() - foundPlayer.getLookAngle().x * 2), (int) (foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2))),
-												(foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2));
-										if (_ent instanceof ServerPlayer _serverPlayer)
-											_serverPlayer.connection.teleport((foundPlayer.getX() - foundPlayer.getLookAngle().x * 2),
-													(world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) (foundPlayer.getX() - foundPlayer.getLookAngle().x * 2), (int) (foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2))),
-													(foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2), _ent.getYRot(), _ent.getXRot());
-									}
-								}
-							}
-						}
-						if (Math.random() < (1) / ((float) 250) && (entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_sonicCooldown) : 0) == 0) {
-							{
-								final Vec3 _center = new Vec3(x, y, z);
-								for (Entity entityiterator : world.getEntitiesOfClass(Entity.class, new AABB(_center, _center).inflate(16 / 2d), e -> true).stream().sorted(Comparator.comparingDouble(_entcnd -> _entcnd.distanceToSqr(_center)))
-										.toList()) {
-									if (!(entityiterator instanceof RotEntity)) {
-										if (foundPlayer instanceof LivingEntity _entity && !_entity.level().isClientSide())
-											_entity.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 25, 1, false, false));
-										entityiterator.hurt(new DamageSource(world.holderOrThrow(DamageTypes.SONIC_BOOM)), 10);
-										entityiterator.setDeltaMovement(new Vec3((((entityiterator.getX() - entity.getX()) / (entityiterator.position()).distanceTo((entity.position()))) * 2), 0.55,
-												(((entityiterator.getZ() - entity.getZ()) / (entityiterator.position()).distanceTo((entity.position()))) * 2)));
-									}
-								}
-							}
-							if (entity instanceof RotEntity _datEntSetI)
-								_datEntSetI.getEntityData().set(RotEntity.DATA_sonicCooldown, 200);
-							loop = 0;
-							particleAmount = 100;
-							masterRadius = 10;
-							while (loop < particleAmount) {
-								if (world instanceof ServerLevel _level)
-									_level.sendParticles(ParticleTypes.SWEEP_ATTACK, (entity.getX() + Math.cos((loop / particleAmount) * Math.PI * 2) * masterRadius), (entity.getY() + 2),
-											(entity.getZ() + Math.sin((loop / particleAmount) * Math.PI * 2) * masterRadius), 1, 0, 0, 0, 0);
-								loop = loop + 1;
-							}
-							if (world instanceof Level _level) {
-								if (!_level.isClientSide()) {
-									_level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("entity.warden.sonic_boom")), SoundSource.HOSTILE, 2, (float) 0.6);
-								} else {
-									_level.playLocalSound(x, y, z, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("entity.warden.sonic_boom")), SoundSource.HOSTILE, 2, (float) 0.6, false);
-								}
-							}
-						}
-						if ((entity instanceof LivingEntity _livEnt ? _livEnt.getHealth() : -1) <= 180) {
-							if ((foundPlayer.position()).distanceTo((entity.position())) <= 13) {
-								if (Math.random() < (1) / ((float) 125)) {
-									{
-										Entity _ent = entity;
-										_ent.teleportTo((foundPlayer.getX() - foundPlayer.getLookAngle().x * 2),
-												(world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) (foundPlayer.getX() - foundPlayer.getLookAngle().x * 2), (int) (foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2))),
-												(foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2));
-										if (_ent instanceof ServerPlayer _serverPlayer)
-											_serverPlayer.connection.teleport((foundPlayer.getX() - foundPlayer.getLookAngle().x * 2),
-													(world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) (foundPlayer.getX() - foundPlayer.getLookAngle().x * 2), (int) (foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2))),
-													(foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2), _ent.getYRot(), _ent.getXRot());
-									}
-									{
-										final Vec3 _center = new Vec3(x, y, z);
-										for (Entity entityiterator : world.getEntitiesOfClass(Entity.class, new AABB(_center, _center).inflate(16 / 2d), e -> true).stream().sorted(Comparator.comparingDouble(_entcnd -> _entcnd.distanceToSqr(_center)))
-												.toList()) {
-											if (!(entityiterator instanceof RotEntity)) {
-												entityiterator.hurt(new DamageSource(world.holderOrThrow(DamageTypes.EXPLOSION)), 12);
-												entityiterator.hurt(new DamageSource(world.holderOrThrow(DamageTypes.SONIC_BOOM)), 15);
-												entityiterator.setDeltaMovement(new Vec3((((entityiterator.getX() - entity.getX()) / (entityiterator.position()).distanceTo((entity.position()))) * 2), 0.55,
-														(((entityiterator.getZ() - entity.getZ()) / (entityiterator.position()).distanceTo((entity.position()))) * 2)));
-											}
-										}
-									}
-									if (entity instanceof RotEntity _datEntSetI)
-										_datEntSetI.getEntityData().set(RotEntity.DATA_sonicCooldown, 125);
-									if (world instanceof Level _level && !_level.isClientSide())
-										_level.explode(null, (entity.getX()), (entity.getY()), (entity.getZ()), 14, Level.ExplosionInteraction.TNT);
-									loop = 0;
-									particleAmount = 80;
-									masterRadius = 10;
-									while (loop < particleAmount) {
-										if (world instanceof ServerLevel _level)
-											_level.sendParticles(ParticleTypes.EXPLOSION, (entity.getX() + Math.cos((loop / particleAmount) * Math.PI * 2) * masterRadius), (entity.getY() + 2),
-													(entity.getZ() + Math.sin((loop / particleAmount) * Math.PI * 2) * masterRadius), 1, 0, 0, 0, 0);
-										if (world instanceof ServerLevel _level)
-											_level.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, (entity.getX() + Math.cos((loop / particleAmount) * Math.PI * 2) * masterRadius), (entity.getY() + 2),
-													(entity.getZ() + Math.sin((loop / particleAmount) * Math.PI * 2) * masterRadius), 2, 0, 0, 0, 0);
-										loop = loop + 1;
-									}
-									if (world instanceof Level _level) {
-										if (!_level.isClientSide()) {
-											_level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("entity.warden.sonic_boom")), SoundSource.HOSTILE, 2, (float) 0.6);
-										} else {
-											_level.playLocalSound(x, y, z, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("entity.warden.sonic_boom")), SoundSource.HOSTILE, 2, (float) 0.6, false);
-										}
-									}
-								}
-							}
-						}
-						if ((entity instanceof LivingEntity _livEnt ? _livEnt.getHealth() : -1) == 250) {
-							if (foundPlayer instanceof LivingEntity _entity && !_entity.level().isClientSide())
-								_entity.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 1, false, false));
-							if (world instanceof Level _level) {
-								if (!_level.isClientSide()) {
-									_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:rot_roar")), SoundSource.HOSTILE, 1, (float) 0.7);
-								} else {
-									_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:rot_roar")), SoundSource.HOSTILE, 1, (float) 0.7, false);
-								}
-							}
-							if ((foundPlayer.position()).distanceTo((entity.position())) > 13) {
-								if (Math.random() < (1) / ((float) 5)) {
-									if (foundPlayer.getY()
-											- world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) (foundPlayer.getX() - foundPlayer.getLookAngle().x * 2), (int) (foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2)) < 6) {
-										{
-											Entity _ent = entity;
-											_ent.teleportTo((foundPlayer.getX() - foundPlayer.getLookAngle().x * 2),
-													(world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) (foundPlayer.getX() - foundPlayer.getLookAngle().x * 2), (int) (foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2))),
-													(foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2));
-											if (_ent instanceof ServerPlayer _serverPlayer)
-												_serverPlayer.connection.teleport((foundPlayer.getX() - foundPlayer.getLookAngle().x * 2),
-														(world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) (foundPlayer.getX() - foundPlayer.getLookAngle().x * 2), (int) (foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2))),
-														(foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2), _ent.getYRot(), _ent.getXRot());
-										}
-									}
-								}
-							}
-						}
-						if (foundPlayer instanceof LivingEntity _livEnt160 && _livEnt160.hasEffect(MobEffects.NIGHT_VISION)) {
-							if (Math.random() < (1) / ((float) 70)) {
-								if (foundPlayer instanceof LivingEntity _entity && !_entity.level().isClientSide())
-									_entity.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 1, false, false));
-							}
-						}
-					} else {
-						if (Math.random() < (1) / ((float) 80)) {
-							if ((foundPlayer.position()).distanceTo((entity.position())) > 15) {
-								if (foundPlayer.getY() - world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) (foundPlayer.getX() - foundPlayer.getLookAngle().x * 2), (int) (foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2)) < 6) {
-									{
-										Entity _ent = entity;
-										_ent.teleportTo((foundPlayer.getX() - foundPlayer.getLookAngle().x * 2),
-												(world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) (foundPlayer.getX() - foundPlayer.getLookAngle().x * 2), (int) (foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2))),
-												(foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2));
-										if (_ent instanceof ServerPlayer _serverPlayer)
-											_serverPlayer.connection.teleport((foundPlayer.getX() - foundPlayer.getLookAngle().x * 2),
-													(world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) (foundPlayer.getX() - foundPlayer.getLookAngle().x * 2), (int) (foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2))),
-													(foundPlayer.getZ() - foundPlayer.getLookAngle().z * 2), _ent.getYRot(), _ent.getXRot());
-									}
-								}
-							}
-						}
-					}
-					if (foundPlayer.getPersistentData().getDouble("backwoods_time") % 60 != 0) {
-						foundPlayer.getPersistentData().putDouble("backwoods_time", (foundPlayer.getPersistentData().getDouble("backwoods_time") - 0.5));
-					}
-					if (foundPlayer instanceof LivingEntity _livEnt186 && _livEnt186.isFallFlying()) {
-						if (foundPlayer.getPersistentData().getDouble("rot_flight_timer") == 0) {
-							foundPlayer.getPersistentData().putDouble("rot_flight_timer", 35);
-							if (world instanceof Level _level) {
-								if (!_level.isClientSide()) {
-									_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:rot_roar")), SoundSource.HOSTILE, 3, (float) 0.5);
-								} else {
-									_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:rot_roar")), SoundSource.HOSTILE, 3, (float) 0.5, false);
-								}
-							}
-						}
-						if (foundPlayer.getPersistentData().getDouble("rot_flight_timer") > 0) {
-							foundPlayer.getPersistentData().putDouble("rot_flight_timer", (foundPlayer.getPersistentData().getDouble("rot_flight_timer") - 1));
-							if (foundPlayer.getPersistentData().getDouble("rot_flight_timer") == 0) {
-								if (foundPlayer instanceof LivingEntity _entity && !_entity.level().isClientSide())
-									_entity.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 70, 1, false, false));
-								if (foundPlayer instanceof Player _plr && _plr.isFallFlying()) {
-									_plr.stopFallFlying();
-								}
-							}
-						}
-					}
-					if (entity.level().clip(new ClipContext(entity.getEyePosition(1f), entity.getEyePosition(1f).add(entity.getViewVector(1f).scale(4)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity)).getType() == HitResult.Type.BLOCK) {
-						if (entity instanceof RotEntity _datEntSetI)
-							_datEntSetI.getEntityData().set(RotEntity.DATA_mineProgress, (int) ((entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineProgress) : 0) + 1));
-						if (entity.tickCount % 6 == 0) {
-							if (entity instanceof LivingEntity _entity)
-								_entity.swing(InteractionHand.MAIN_HAND, true);
-						}
-						if (entity instanceof RotEntity _datEntSetI)
-							_datEntSetI.getEntityData().set(RotEntity.DATA_mineX,
-									entity.level().clip(new ClipContext(entity.getEyePosition(1f), entity.getEyePosition(1f).add(entity.getViewVector(1f).scale(4)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity)).getBlockPos().getX());
-						if (entity instanceof RotEntity _datEntSetI)
-							_datEntSetI.getEntityData().set(RotEntity.DATA_mineY,
-									entity.level().clip(new ClipContext(entity.getEyePosition(1f), entity.getEyePosition(1f).add(entity.getViewVector(1f).scale(4)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity)).getBlockPos().getY());
-						if (entity instanceof RotEntity _datEntSetI)
-							_datEntSetI.getEntityData().set(RotEntity.DATA_mineZ,
-									entity.level().clip(new ClipContext(entity.getEyePosition(1f), entity.getEyePosition(1f).add(entity.getViewVector(1f).scale(4)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity)).getBlockPos().getZ());
-						if ((entity instanceof RotEntity _datEntI
-								? _datEntI.getEntityData().get(RotEntity.DATA_mineProgress)
-								: 0) > world
-										.getBlockState(BlockPos.containing(entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineX) : 0,
-												entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineY) : 0, entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineZ) : 0))
-										.getDestroySpeed(world,
-												BlockPos.containing(entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineX) : 0,
-														entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineY) : 0, entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineZ) : 0))
-										* 12 + 15) {
-							if (!((entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineY) : 0) == foundPlayer.getY() - 2)) {
-								if (world
-										.getBlockState(BlockPos.containing(entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineX) : 0,
-												entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineY) : 0, entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineZ) : 0))
-										.getDestroySpeed(world, BlockPos.containing(entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineX) : 0,
-												entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineY) : 0, entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineZ) : 0)) >= 0
-										&& world.getBlockState(BlockPos.containing(entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineX) : 0,
-												entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineY) : 0, entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineZ) : 0))
-												.getDestroySpeed(world,
-														BlockPos.containing(entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineX) : 0,
-																entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineY) : 0,
-																entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineZ) : 0)) < 60) {
-									world.destroyBlock(BlockPos.containing(entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineX) : 0,
-											entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineY) : 0, entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineZ) : 0), false);
-									if (world instanceof Level _level)
-										_level.updateNeighborsAt(
-												BlockPos.containing(entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineX) : 0,
-														entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineY) : 0, entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineZ) : 0),
-												_level.getBlockState(BlockPos.containing(entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineX) : 0,
-														entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineY) : 0, entity instanceof RotEntity _datEntI ? _datEntI.getEntityData().get(RotEntity.DATA_mineZ) : 0))
-														.getBlock());
-									if (entity instanceof RotEntity _datEntSetI)
-										_datEntSetI.getEntityData().set(RotEntity.DATA_mineProgress, 0);
-								}
-							}
-						}
-					} else {
-						if (entity instanceof RotEntity _datEntSetI)
-							_datEntSetI.getEntityData().set(RotEntity.DATA_mineProgress, 0);
-					}
+
+			if (windup - 1 <= 0) {
+				fireSonic(world, x, y, z, entity, 16, 16, true);
+				entity.getPersistentData().putDouble(K_SONIC_CD, SONIC_CD);
+			}
+
+			handlePhaseModifiers(entity);
+			handlePassengerAndGrowth(entity);
+			return;
+		}
+
+		double dist = combatTarget.position().distanceTo(entity.position());
+
+		tryPredictiveDodge(world, entity, combatTarget, dist);
+		trySwarmComboTeleport(world, entity, combatTarget);
+		tryFlankTeleport(world, entity, combatTarget, dist);
+
+		if (entity.getPersistentData().getDouble(K_SONIC_CD) <= 0 && Math.random() < 0.012) {
+			entity.getPersistentData().putDouble(K_SONIC_WINDUP, SONIC_WINDUP_TICKS);
+			playHostileSound(world, entity.getX(), entity.getY(), entity.getZ(), "entity.warden.attack_impact", 1.7f, 0.75f);
+		}
+
+		if (entity instanceof LivingEntity liv && liv.getHealth() <= 180 && dist <= 14 && Math.random() < BURST_CHANCE_LOW_HP) {
+			forceTeleportBehind(world, entity, combatTarget);
+			fireSonic(world, x, y, z, entity, 15, 15, true);
+			if (world instanceof Level l && !l.isClientSide()) {
+				l.explode(null, entity.getX(), entity.getY(), entity.getZ(), 12.5f, Level.ExplosionInteraction.TNT);
+			}
+		}
+
+		if (combatTarget instanceof LivingEntity tl && tl.hasEffect(MobEffects.NIGHT_VISION) && Math.random() < 0.14) {
+			if (!tl.level().isClientSide()) tl.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 1, false, false));
+		}
+
+		tryFlightPunish(world, entity, combatTarget);
+		handleForwardCarveMining(world, entity, combatTarget);
+
+		handlePhaseModifiers(entity);
+		handlePassengerAndGrowth(entity);
+	}
+
+	private static void lockLookAtTarget(Entity entity, Entity target) {
+		entity.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(target.getX(), target.getEyeY(), target.getZ()));
+		if (entity instanceof Mob mob) {
+			float yRot = (float) (Mth.atan2(target.getZ() - entity.getZ(), target.getX() - entity.getX()) * (180F / Math.PI)) - 90F;
+			mob.setYRot(yRot);
+			mob.setYHeadRot(yRot);
+			mob.setYBodyRot(yRot);
+		}
+	}
+
+	private static Entity acquireTarget(LevelAccessor world, Entity self, double x, double y, double z) {
+		Entity target = (self instanceof Mob mob) ? mob.getTarget() : null;
+		if (!isValidTarget(target, self)) {
+			target = findEntityInWorldRange(world, LivingEntity.class, x, y, z, TARGET_RANGE);
+			if (!isValidTarget(target, self)) target = null;
+		}
+		if (target == null && self instanceof Mob mob) mob.setTarget(null);
+		return target;
+	}
+
+	private static boolean isValidTarget(Entity target, Entity self) {
+	    if (target == null || !target.isAlive() || target == self) return false;
+	    if (target instanceof RotEntity || target instanceof Villager || target instanceof AmbientCreature || target instanceof Animal || target instanceof Slime) return false;
+	    if (target.getType().is(TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.parse(K_WOODBOUND)))) return false;
+	
+	    return (target instanceof Player)
+	            || (target instanceof Monster)
+	            || (target instanceof net.minecraft.world.entity.animal.IronGolem)
+	            || (target instanceof net.minecraft.world.entity.animal.SnowGolem);
+	}
+
+	private static void tryPredictiveDodge(LevelAccessor world, Entity self, Entity target, double dist) {
+		if (self.getPersistentData().getDouble(K_TP_DODGE_CD) > 0) return;
+		if (!(target instanceof LivingEntity tl) || dist > DODGE_TRIGGER_DIST) return;
+
+		boolean likelySwingNow = tl.swinging;
+		boolean likelySwingSoon = false;
+		if (target instanceof Player p) likelySwingSoon = p.getAttackStrengthScale(0.5f) > 0.9f && dist < 4.6;
+
+		if (!(likelySwingNow || likelySwingSoon)) return;
+		if (Math.random() > DODGE_SWING_CHANCE) return;
+
+		Vec3 look = target.getLookAngle().normalize();
+		Vec3 right = new Vec3(-look.z, 0, look.x).normalize();
+
+		double side = Mth.nextDouble(RandomSource.create(), TELEPORT_SIDE_MIN, TELEPORT_SIDE_MAX);
+		if (RandomSource.create().nextBoolean()) side *= -1;
+
+		double tx = target.getX() + right.x * side - look.x * 0.8;
+		double tz = target.getZ() + right.z * side - look.z * 0.8;
+
+		trySafeTeleportToGround(world, self, tx, tz, "entity.warden.attack_impact", 1.5f, 0.85f, K_TP_DODGE_CD, TP_DODGE_CD);
+	}
+
+	private static void tryFlankTeleport(LevelAccessor world, Entity self, Entity target, double dist) {
+		if (self.getPersistentData().getDouble(K_TP_FLANK_CD) > 0) return;
+
+		boolean noLos = true;
+		if (self instanceof LivingEntity ls) noLos = !ls.hasLineOfSight(target);
+
+		boolean shouldFlank = (dist > TELEPORT_MIN_GAP || noLos) && Math.random() < FLANK_CHANCE;
+		if (!shouldFlank) return;
+
+		Vec3 look = target.getLookAngle().normalize();
+		Vec3 right = new Vec3(-look.z, 0, look.x).normalize();
+		double side = Mth.nextDouble(RandomSource.create(), TELEPORT_SIDE_MIN, TELEPORT_SIDE_MAX);
+		if (RandomSource.create().nextBoolean()) side *= -1;
+
+		double tx = target.getX() - look.x * TELEPORT_BACK_OFFSET + right.x * side;
+		double tz = target.getZ() - look.z * TELEPORT_BACK_OFFSET + right.z * side;
+
+		trySafeTeleportToGround(world, self, tx, tz, "entity.warden.attack_impact", 1.8f, 0.75f, K_TP_FLANK_CD, TP_FLANK_CD);
+	}
+
+	private static void trySwarmComboTeleport(LevelAccessor world, Entity self, Entity target) {
+		if (self.getPersistentData().getDouble(K_TP_COMBO_CD) > 0) return;
+		if (target.position().distanceTo(self.position()) > 16) return;
+
+		int rotCount = countNearbyRot(world, target, 14);
+		if (rotCount < 2) return;
+
+		Vec3 f = target.getLookAngle().normalize();
+		Vec3 r = new Vec3(-f.z, 0, f.x).normalize();
+
+		double[] angles = new double[] {110, 130, 150, -110, -130, -150};
+		for (double deg : angles) {
+			double rad = Math.toRadians(deg);
+			double cs = Math.cos(rad), sn = Math.sin(rad);
+
+			Vec3 dir = new Vec3(f.x * cs + r.x * sn, 0, f.z * cs + r.z * sn).normalize();
+			double radius = Mth.nextDouble(RandomSource.create(), 3.0, 4.5);
+
+			double tx = target.getX() + dir.x * radius;
+			double tz = target.getZ() + dir.z * radius;
+			double ty = world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) tx, (int) tz);
+
+			Vec3 cand = new Vec3(tx, ty, tz);
+			if (isInFrontOfTarget(target, cand)) continue;
+			if (!isSafeTeleportSpot(world, tx, ty, tz, self.getY())) continue;
+
+			teleportEntity(self, tx, ty, tz);
+			playHostileSound(world, tx, ty, tz, "entity.warden.attack_impact", 1.6f, 0.8f);
+			self.getPersistentData().putDouble(K_TP_COMBO_CD, TP_COMBO_CD);
+			return;
+		}
+	}
+
+	private static void forceTeleportBehind(LevelAccessor world, Entity self, Entity target) {
+		Vec3 look = target.getLookAngle().normalize();
+		double tx = target.getX() - look.x * TELEPORT_BACK_OFFSET;
+		double tz = target.getZ() - look.z * TELEPORT_BACK_OFFSET;
+		trySafeTeleportToGround(world, self, tx, tz, "entity.warden.attack_impact", 1.8f, 0.7f, K_TP_FLANK_CD, TP_FLANK_CD);
+	}
+
+	private static boolean isInFrontOfTarget(Entity target, Vec3 candidatePos) {
+		Vec3 forward = target.getLookAngle().normalize();
+		Vec3 toCandidate = candidatePos.subtract(target.position()).normalize();
+		return forward.dot(toCandidate) > 0.25;
+	}
+
+	private static int countNearbyRot(LevelAccessor world, Entity centerTarget, double radius) {
+		Vec3 c = centerTarget.position();
+		return world.getEntitiesOfClass(RotEntity.class, new AABB(c, c).inflate(radius), e -> e.isAlive()).size();
+	}
+
+	private static void trySafeTeleportToGround(LevelAccessor world, Entity self, double targetX, double targetZ, String soundId, float vol, float pitch, String cdKey, int cdTicks) {
+		double groundY = world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) targetX, (int) targetZ);
+		if (!isSafeTeleportSpot(world, targetX, groundY, targetZ, self.getY())) return;
+
+		teleportEntity(self, targetX, groundY, targetZ);
+		playHostileSound(world, targetX, groundY, targetZ, soundId, vol, pitch);
+		self.getPersistentData().putDouble(cdKey, cdTicks);
+	}
+
+	private static boolean isSafeTeleportSpot(LevelAccessor world, double x, double y, double z, double fromY) {
+		if (Math.abs(y - fromY) > TELEPORT_MAX_VERTICAL_DIFF) return false;
+
+		BlockPos feet = BlockPos.containing(x, y, z);
+		BlockPos head = feet.above();
+		BlockPos below = feet.below();
+
+		BlockState feetState = world.getBlockState(feet);
+		BlockState headState = world.getBlockState(head);
+		BlockState belowState = world.getBlockState(below);
+
+		if (!belowState.blocksMotion()) return false;
+		if (!feetState.isAir() && !feetState.canBeReplaced()) return false;
+		if (!headState.isAir() && !headState.canBeReplaced()) return false;
+		return true;
+	}
+
+	private static void fireSonic(LevelAccessor world, double x, double y, double z, Entity self, float sonicDamage, float extraDamage, boolean knockback) {
+		final Vec3 center = new Vec3(x, y, z);
+
+		List<Entity> nearby = world.getEntitiesOfClass(Entity.class, new AABB(center, center).inflate(8), e -> true).stream()
+				.sorted(Comparator.comparingDouble(e -> e.distanceToSqr(center))).toList();
+
+		for (Entity e : nearby) {
+			if (e == self || e instanceof RotEntity || !(e instanceof LivingEntity)) continue;
+
+			e.hurt(new DamageSource(world.holderOrThrow(DamageTypes.SONIC_BOOM)), sonicDamage);
+			if (extraDamage > 0) e.hurt(new DamageSource(world.holderOrThrow(DamageTypes.EXPLOSION)), extraDamage);
+
+			if (knockback) {
+				double d = e.position().distanceTo(self.position());
+				if (d > 0) {
+					e.setDeltaMovement(new Vec3(((e.getX() - self.getX()) / d) * 2.0, 0.55, ((e.getZ() - self.getZ()) / d) * 2.0));
 				}
 			}
-			if (entity.isPassenger()) {
-				entity.stopRiding();
+
+			if (e instanceof LivingEntity liv && !liv.level().isClientSide()) {
+				liv.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 35, 1, false, false));
+			}
+		}
+
+		ringParticles(world, self, ParticleTypes.SWEEP_ATTACK, 90, 10, 1);
+		playHostileSound(world, x, y, z, "entity.warden.sonic_boom", 2.0f, 0.6f);
+	}
+
+	private static void handleForwardCarveMining(LevelAccessor world, Entity self, Entity target) {
+		HitResult hit = self.level().clip(new ClipContext(
+				self.getEyePosition(1f),
+				self.getEyePosition(1f).add(self.getViewVector(1f).scale(3.0)),
+				ClipContext.Block.COLLIDER,
+				ClipContext.Fluid.NONE,
+				self
+		));
+
+		if (hit.getType() != HitResult.Type.BLOCK || !(hit instanceof BlockHitResult)) {
+			if (self instanceof RotEntity rotSet) rotSet.getEntityData().set(RotEntity.DATA_mineProgress, 0);
+			return;
+		}
+
+		if (self instanceof RotEntity rotSet) {
+			rotSet.getEntityData().set(RotEntity.DATA_mineProgress, rotSet.getEntityData().get(RotEntity.DATA_mineProgress) + 1);
+		}
+
+		if (self.tickCount % 6 == 0 && self instanceof LivingEntity liv) {
+			liv.swing(InteractionHand.MAIN_HAND, true);
+		}
+
+		int progress = self instanceof RotEntity rot ? rot.getEntityData().get(RotEntity.DATA_mineProgress) : 0;
+		if (progress < 10) return;
+
+		Vec3 forward = self.getViewVector(1f).normalize();
+		Vec3 right = new Vec3(-forward.z, 0, forward.x).normalize();
+		int baseY = Mth.floor(self.getY());
+
+		for (int depth = 1; depth <= MINE_REACH; depth++) {
+			double cx = self.getX() + forward.x * depth;
+			double cz = self.getZ() + forward.z * depth;
+
+			for (int w = -MINE_HALF_WIDTH; w <= MINE_HALF_WIDTH; w++) {
+				double px = cx + right.x * w;
+				double pz = cz + right.z * w;
+
+				for (int h = 0; h < MINE_HEIGHT; h++) {
+					BlockPos bp = BlockPos.containing(px, baseY + h, pz);
+
+					if (bp.getY() == (int) (target.getY() - 2)) continue;
+
+					BlockState st = world.getBlockState(bp);
+					float hard = st.getDestroySpeed(world, bp);
+					if (hard < 0 || hard >= MAX_BREAKABLE_HARDNESS || st.isAir()) continue;
+
+					world.destroyBlock(bp, false);
+					if (world instanceof Level l) l.updateNeighborsAt(bp, l.getBlockState(bp).getBlock());
+				}
+			}
+		}
+
+		if (self instanceof RotEntity rotSet) rotSet.getEntityData().set(RotEntity.DATA_mineProgress, 0);
+	}
+
+	private static void tryFlightPunish(LevelAccessor world, Entity self, Entity target) {
+		if (!(target instanceof Player p) || !p.isFallFlying()) return;
+
+		if (target.getPersistentData().getDouble(K_FLIGHT_TIMER) == 0) {
+			target.getPersistentData().putDouble(K_FLIGHT_TIMER, 35);
+			playHostileSound(world, self.getX(), self.getY(), self.getZ(), "the_backwoods:rot_roar", 3f, 0.5f);
+		}
+
+		if (target.getPersistentData().getDouble(K_FLIGHT_TIMER) > 0) {
+			target.getPersistentData().putDouble(K_FLIGHT_TIMER, target.getPersistentData().getDouble(K_FLIGHT_TIMER) - 1);
+			if (target.getPersistentData().getDouble(K_FLIGHT_TIMER) == 0) {
+				if (target instanceof LivingEntity liv && !liv.level().isClientSide()) {
+					liv.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 70, 1, false, false));
+				}
+				if (p.isFallFlying()) p.stopFallFlying();
 			}
 		}
 	}
 
-	private static Entity findEntityInWorldRange(LevelAccessor world, Class<? extends Entity> clazz, double x, double y, double z, double range) {
-		return (Entity) world.getEntitiesOfClass(clazz, AABB.ofSize(new Vec3(x, y, z), range, range, range), e -> true).stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(x, y, z))).findFirst().orElse(null);
+	private static void handlePhaseModifiers(Entity entity) {
+		if (!(entity instanceof LivingEntity living)) return;
+
+		double hp = living.getHealth();
+
+		if (hp <= 180) {
+			if (entity.getPersistentData().getDouble(K_ENRAGED) == 0) {
+				entity.getPersistentData().putDouble(K_ENRAGED, 1);
+				AttributeModifier mod = new AttributeModifier(ResourceLocation.parse("the_backwoods:speed_enraged"), 0.15, AttributeModifier.Operation.ADD_VALUE);
+				if (!living.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(mod.id())) {
+					living.getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(mod);
+				}
+				if (!living.level().isClientSide()) living.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 500, 2, true, false));
+			}
+		} else if (entity.getPersistentData().getDouble(K_ENRAGED) == 1) {
+			entity.getPersistentData().putDouble(K_ENRAGED, 0);
+			living.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(ResourceLocation.parse("the_backwoods:speed_enraged"));
+		}
+
+		if (hp <= 90) {
+			if (entity.getPersistentData().getDouble(K_CRITICAL) == 0) {
+				entity.getPersistentData().putDouble(K_CRITICAL, 1);
+				AttributeModifier mod = new AttributeModifier(ResourceLocation.parse("the_backwoods:speed_critical"), 0.25, AttributeModifier.Operation.ADD_VALUE);
+				if (!living.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(mod.id())) {
+					living.getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(mod);
+				}
+				if (!living.level().isClientSide()) living.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 350, 8, true, false));
+			}
+		} else if (entity.getPersistentData().getDouble(K_CRITICAL) == 1) {
+			entity.getPersistentData().putDouble(K_CRITICAL, 0);
+			living.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(ResourceLocation.parse("the_backwoods:speed_critical"));
+		}
 	}
 
-	private static boolean hasEntityInInventory(Entity entity, ItemStack itemstack) {
-		if (entity instanceof Player player)
-			return player.getInventory().contains(stack -> !stack.isEmpty() && ItemStack.isSameItem(stack, itemstack));
-		return false;
+	private static void handlePassengerAndGrowth(Entity entity) {
+		if (entity.isPassenger()) entity.stopRiding();
+
+		entity.getPersistentData().putDouble(K_AGE, entity.getPersistentData().getDouble(K_AGE) + 1);
+		if (entity.getPersistentData().getDouble(K_AGE) % 1200 == 0) {
+			if (entity instanceof LivingEntity living && living.getAttributes().hasAttribute(Attributes.MAX_HEALTH)) {
+				living.getAttribute(Attributes.MAX_HEALTH).setBaseValue(living.getAttribute(Attributes.MAX_HEALTH).getBaseValue() + 2);
+				living.setHealth(living.getHealth() + 2);
+			}
+		}
+	}
+
+	private static void tickCooldown(Entity e, String key, int step) {
+		double v = e.getPersistentData().getDouble(key);
+		if (v > 0) e.getPersistentData().putDouble(key, Math.max(0, v - step));
+	}
+
+	private static void playHostileSound(LevelAccessor world, double x, double y, double z, String soundId, float volume, float pitch) {
+		if (!(world instanceof Level level)) return;
+		if (!level.isClientSide()) {
+			level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse(soundId)), SoundSource.HOSTILE, volume, pitch);
+		} else {
+			level.playLocalSound(x, y, z, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse(soundId)), SoundSource.HOSTILE, volume, pitch, false);
+		}
+	}
+
+	private static void ringParticles(LevelAccessor world, Entity entity, net.minecraft.core.particles.ParticleOptions particle, int points, double radius, int countEach) {
+		if (!(world instanceof ServerLevel level)) return;
+		for (int i = 0; i < points; i++) {
+			double angle = (i / (double) points) * Math.PI * 2;
+			level.sendParticles(
+					particle,
+					entity.getX() + Math.cos(angle) * radius,
+					entity.getY() + 2,
+					entity.getZ() + Math.sin(angle) * radius,
+					countEach, 0, 0, 0, 0
+			);
+		}
+	}
+
+	private static void teleportEntity(Entity ent, double x, double y, double z) {
+		ent.teleportTo(x, y, z);
+		if (ent instanceof ServerPlayer sp) {
+			sp.connection.teleport(x, y, z, ent.getYRot(), ent.getXRot());
+		}
+	}
+
+	private static Entity findEntityInWorldRange(LevelAccessor world, Class<? extends Entity> clazz, double x, double y, double z, double range) {
+		return world.getEntitiesOfClass(clazz, AABB.ofSize(new Vec3(x, y, z), range, range, range), e -> true)
+				.stream()
+				.sorted(Comparator.comparingDouble(e -> e.distanceToSqr(x, y, z)))
+				.findFirst()
+				.orElse(null);
 	}
 }

@@ -17,7 +17,7 @@ public class PetrifiedRottenSwordItem extends SwordItem {
 	private static final Tier TOOL_TIER = new Tier() {
 		@Override
 		public int getUses() {
-			return 2000;
+			return 2013;
 		}
 
 		@Override

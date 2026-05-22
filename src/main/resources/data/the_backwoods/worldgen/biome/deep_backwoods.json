@@ -51,18 +51,10 @@
     "misc": []
   },
   "spawn_costs": {},
-  "carvers": {
-    "air": [
-      "minecraft:cave",
-      "minecraft:cave_extra_underground",
-      "minecraft:canyon"
-    ]
-  },
+  "carvers": {},
   "features": [
     [],
-    [
-      "minecraft:lake_lava_underground"
-    ],
+    [],
     [],
     [],
     [],

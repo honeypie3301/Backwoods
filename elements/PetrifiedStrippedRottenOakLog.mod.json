@@ -49,7 +49,7 @@
     "isWaterloggable": false,
     "hasBlockItem": true,
     "maxStackSize": 64,
-    "rarity": "UNCOMMON",
+    "rarity": "COMMON",
     "immuneToFire": false,
     "creativeTabs": [
       {

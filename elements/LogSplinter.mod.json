@@ -21,7 +21,80 @@
     "boundingBoxScale": {
       "fixedValue": 1.0
     },
-    "modelLayers": [],
+    "modelLayers": [
+      {
+        "model": "Default",
+        "texture": "rot_stage_0.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "LogSplinterDisplayCondition"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "log_rot_stage_1.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "LogSplinterDisplayCondition2"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "log_rot_stage_2.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "LogSplinterDisplayCondition3"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "log_rot_stage_3.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "LogSplinterDisplayCondition4"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "log_rot_stage_4.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "LogSplinterDisplayCondition5"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "log_rot_stage_5.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "LogSplinterDisplayCondition6"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "log_rot_stage_6.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "LogSplinterDisplayCondition7"
+        }
+      },
+      {
+        "model": "Default",
+        "texture": "petrified_oak_log_biped.png",
+        "disableHurtOverlay": false,
+        "glow": false,
+        "condition": {
+          "name": "LogSplinterDisplayCondition8"
+        }
+      }
+    ],
     "animations": [],
     "modelWidth": 0.6,
     "modelHeight": 1.8,
@@ -90,7 +163,7 @@
     "canControlForward": false,
     "canControlStrafe": false,
     "immuneToFire": false,
-    "immuneToArrows": true,
+    "immuneToArrows": false,
     "immuneToFallDamage": false,
     "immuneToCactus": true,
     "immuneToDrowning": true,
@@ -176,8 +249,18 @@
         "name": "isEnraged",
         "type": "integer",
         "value": 0
+      },
+      {
+        "min": -2147483648,
+        "max": 2147483647,
+        "name": "Age",
+        "type": "integer",
+        "value": 0
       }
     ],
+    "onStruckByLightning": {
+      "name": "LogSplinterItIsStruckByLightning"
+    },
     "onMobTickUpdate": {
       "name": "LogSplinterOnEntityTickUpdate"
     },
@@ -186,7 +269,7 @@
     },
     "hasAI": true,
     "aiBase": "(none)",
-    "aixml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"aitasks_container\" deletable=\"false\" x=\"40\" y=\"40\"><next><block type=\"attack_on_collide\"><field name=\"speed\">1.3</field><field name=\"longmemory\">TRUE</field><field name=\"condition\">null,null</field><next><block type=\"attack_entity\"><field name=\"insight\">FALSE</field><field name=\"nearby\">FALSE</field><field name=\"entity\">EntityPlayer</field><field name=\"condition\">null,null</field><next><block type=\"attack_entity\"><field name=\"insight\">TRUE</field><field name=\"nearby\">FALSE</field><field name=\"entity\">CUSTOM:AshWeaver</field><field name=\"condition\">null,null</field><next><block type=\"watch_closest_entity\"><field name=\"entity\">EntityPlayer</field><field name=\"radius\">32</field><field name=\"condition\">null,null</field></block></next></block></next></block></next></block></next></block></xml>",
+    "aixml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"aitasks_container\" deletable=\"false\" x=\"40\" y=\"40\"><next><block type=\"attack_on_collide\"><field name=\"speed\">1.3</field><field name=\"longmemory\">TRUE</field><field name=\"condition\">null,null</field><next><block type=\"attack_entity\"><field name=\"insight\">FALSE</field><field name=\"nearby\">FALSE</field><field name=\"entity\">EntityPlayer</field><field name=\"condition\">null,null</field><next><block type=\"attack_entity\"><field name=\"insight\">TRUE</field><field name=\"nearby\">FALSE</field><field name=\"entity\">CUSTOM:AshWeaver</field><field name=\"condition\">null,null</field><next><block type=\"watch_closest_entity\"><field name=\"entity\">EntityPlayer</field><field name=\"radius\">128</field><field name=\"condition\">null,null</field></block></next></block></next></block></next></block></next></block></xml>",
     "breedable": false,
     "tameable": false,
     "breedTriggerItems": [],
@@ -199,6 +282,9 @@
     "rangedAttackRadius": 10.0,
     "spawnThisMob": true,
     "doesDespawnWhenIdle": true,
+    "spawningCondition": {
+      "name": "LogSplinterNaturalEntitySpawningCondition"
+    },
     "spawningProbability": 1,
     "mobSpawningType": "monster",
     "minNumberOfMobsPerGroup": 1,

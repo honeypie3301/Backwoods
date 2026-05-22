@@ -16,7 +16,7 @@ public class PaleRemedyPlayerFinishesUsingItemProcedure {
 			return;
 		if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
 			_entity.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 60, 0, false, false));
-		entity.getPersistentData().putDouble("backwoods_time", (Math.min(99999, Math.max(entity.getPersistentData().getDouble("backwoods_time") - 3000, 0))));
+		entity.getPersistentData().putDouble("backwoods_time", (entity.getPersistentData().getDouble("backwoods_time") - 3000));
 		if (entity instanceof Player _player) {
 			ItemStack _setstack = new ItemStack(Items.BOWL).copy();
 			_setstack.setCount(1);

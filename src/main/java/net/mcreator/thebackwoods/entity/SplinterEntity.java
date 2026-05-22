@@ -12,7 +12,6 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.projectile.ThrownPotion;
-import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
@@ -25,7 +24,6 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.Difficulty;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.resources.ResourceLocation;
@@ -38,6 +36,8 @@ import net.minecraft.core.BlockPos;
 
 import net.mcreator.thebackwoods.procedures.SplinterOnInitialEntitySpawnProcedure;
 import net.mcreator.thebackwoods.procedures.SplinterOnEntityTickUpdateProcedure;
+import net.mcreator.thebackwoods.procedures.SplinterNaturalEntitySpawningConditionProcedure;
+import net.mcreator.thebackwoods.procedures.SplinterItIsStruckByLightningProcedure;
 import net.mcreator.thebackwoods.init.TheBackwoodsModEntities;
 
 import javax.annotation.Nullable;
@@ -53,6 +53,7 @@ public class SplinterEntity extends Monster {
 	public static final EntityDataAccessor<Integer> DATA_watchTimer = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
 	public static final EntityDataAccessor<Integer> DATA_isEnraged = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
 	public static final EntityDataAccessor<Integer> DATA_stalkTimer = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<Integer> DATA_Age = SynchedEntityData.defineId(SplinterEntity.class, EntityDataSerializers.INT);
 
 	public SplinterEntity(EntityType<SplinterEntity> type, Level world) {
 		super(type, world);
@@ -73,6 +74,7 @@ public class SplinterEntity extends Monster {
 		builder.define(DATA_watchTimer, 0);
 		builder.define(DATA_isEnraged, 0);
 		builder.define(DATA_stalkTimer, 0);
+		builder.define(DATA_Age, 0);
 	}
 
 	@Override
@@ -87,7 +89,7 @@ public class SplinterEntity extends Monster {
 		});
 		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal(this, Player.class, true, false));
 		this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, AshWeaverEntity.class, true, false));
-		this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, (float) 32));
+		this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, (float) 128));
 		this.goalSelector.addGoal(5, new OpenDoorGoal(this, true));
 	}
 
@@ -122,9 +124,13 @@ public class SplinterEntity extends Monster {
 	}
 
 	@Override
+	public void thunderHit(ServerLevel serverWorld, LightningBolt lightningBolt) {
+		super.thunderHit(serverWorld, lightningBolt);
+		SplinterItIsStruckByLightningProcedure.execute(this.level(), this.getX(), this.getY(), this.getZ(), this);
+	}
+
+	@Override
 	public boolean hurt(DamageSource damagesource, float amount) {
-		if (damagesource.getDirectEntity() instanceof AbstractArrow)
-			return false;
 		if (damagesource.getDirectEntity() instanceof ThrownPotion || damagesource.getDirectEntity() instanceof AreaEffectCloud || damagesource.typeHolder().is(NeoForgeMod.POISON_DAMAGE))
 			return false;
 		if (damagesource.is(DamageTypes.CACTUS))
@@ -156,6 +162,7 @@ public class SplinterEntity extends Monster {
 		compound.putInt("DatawatchTimer", this.entityData.get(DATA_watchTimer));
 		compound.putInt("DataisEnraged", this.entityData.get(DATA_isEnraged));
 		compound.putInt("DatastalkTimer", this.entityData.get(DATA_stalkTimer));
+		compound.putInt("DataAge", this.entityData.get(DATA_Age));
 	}
 
 	@Override
@@ -181,6 +188,8 @@ public class SplinterEntity extends Monster {
 			this.entityData.set(DATA_isEnraged, compound.getInt("DataisEnraged"));
 		if (compound.contains("DatastalkTimer"))
 			this.entityData.set(DATA_stalkTimer, compound.getInt("DatastalkTimer"));
+		if (compound.contains("DataAge"))
+			this.entityData.set(DATA_Age, compound.getInt("DataAge"));
 	}
 
 	@Override
@@ -200,9 +209,12 @@ public class SplinterEntity extends Monster {
 	}
 
 	public static void init(RegisterSpawnPlacementsEvent event) {
-		event.register(TheBackwoodsModEntities.SPLINTER.get(), SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-				(entityType, world, reason, pos, random) -> (world.getDifficulty() != Difficulty.PEACEFUL && Monster.isDarkEnoughToSpawn(world, pos, random) && Mob.checkMobSpawnRules(entityType, world, reason, pos, random)),
-				RegisterSpawnPlacementsEvent.Operation.REPLACE);
+		event.register(TheBackwoodsModEntities.SPLINTER.get(), SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (entityType, world, reason, pos, random) -> {
+			int x = pos.getX();
+			int y = pos.getY();
+			int z = pos.getZ();
+			return SplinterNaturalEntitySpawningConditionProcedure.execute(world, x, y, z);
+		}, RegisterSpawnPlacementsEvent.Operation.REPLACE);
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {

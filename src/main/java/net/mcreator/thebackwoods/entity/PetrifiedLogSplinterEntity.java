@@ -82,7 +82,7 @@ public class PetrifiedLogSplinterEntity extends Monster {
 		});
 		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal(this, Player.class, false, false));
 		this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, AshWeaverEntity.class, true, false));
-		this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, (float) 32));
+		this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, (float) 128));
 	}
 
 	@Override

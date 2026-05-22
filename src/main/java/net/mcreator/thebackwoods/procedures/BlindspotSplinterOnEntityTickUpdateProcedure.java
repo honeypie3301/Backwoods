@@ -4,7 +4,7 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.bus.api.Event;
-
+// 1.21.1 neoforge
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.HitResult;
@@ -38,7 +38,6 @@ import net.mcreator.thebackwoods.init.TheBackwoodsModBlocks;
 import net.mcreator.thebackwoods.entity.BlindspotSplinterEntity;
 
 import javax.annotation.Nullable;
-
 import java.util.Comparator;
 
 @EventBusSubscriber
@@ -46,8 +45,11 @@ public class BlindspotSplinterOnEntityTickUpdateProcedure {
 
 	private static final double WATCH_DOT_THRESHOLD = 0.5;
 	private static final double ACTIVE_MOVE_SPEED = 0.335;
+	private static final double DEGRADED_MOVE_SPEED = 0.20;
 	private static final float MINE_SPEED_MULTIPLIER = 50f;
 	private static final float MINE_SPEED_BASE = 50f;
+	private static final float DEGRADED_MINE_SPEED_MULTIPLIER = 100f;
+	private static final float DEGRADED_MINE_SPEED_BASE = 100f;
 	private static final float MAX_BREAKABLE_HARDNESS = 50f;
 	private static final double TARGET_RANGE = 56;
 	private static final double SPLINTER_SCAN_RADIUS = 48;
@@ -55,19 +57,23 @@ public class BlindspotSplinterOnEntityTickUpdateProcedure {
 	private static final double ROSE_WILT_TICKS = 150;
 	private static final int ROSE_SCAN_XZ = 6;
 	private static final int ROSE_SCAN_Y = 3;
-
-	// How many ticks the player must stare before rage triggers
 	private static final int RAGE_WATCH_THRESHOLD = 590;
-
-	// Blindspot Splinter must be beyond this range for rage to end
+	private static final int RAGE_THRESHOLD_HIT_BONUS = 100;
 	private static final double RAGE_ESCAPE_RANGE = 16.0;
+
+	private static final String K_RAGE_BONUS = "rage_watch_bonus";
+	private static final String K_LAST_HURT_TIME = "rage_last_hurt_time";
+
+	// age thresholds from display condition procedures
+	private static final int AGE_THIRD_TO_LAST = 504000;  // stage 7 - slow mining + speed
+	private static final int AGE_SECOND_TO_LAST = 576000; // stage 8 - stop bridging
+	private static final int AGE_LAST = 648000;           // stage 9 - die
 
 	@SubscribeEvent
 	public static void onEntityTick(EntityTickEvent.Pre event) {
 		execute(event, event.getEntity().level(), event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getEntity());
 	}
 
-	// DO NOT DELETE: This empty method prevents the "no suitable method found" error in the Entity class
 	public static void execute() {
 	}
 
@@ -79,7 +85,6 @@ public class BlindspotSplinterOnEntityTickUpdateProcedure {
 		if (entity == null || !(entity instanceof BlindspotSplinterEntity))
 			return;
 
-		// 1. Force exit from boats
 		if (entity.isPassenger()) {
 			Entity vehicle = entity.getVehicle();
 			if (vehicle instanceof net.minecraft.world.entity.vehicle.Boat || vehicle instanceof net.minecraft.world.entity.vehicle.ChestBoat) {
@@ -92,10 +97,22 @@ public class BlindspotSplinterOnEntityTickUpdateProcedure {
 
 		for (BlindspotSplinterEntity splinter : world.getEntitiesOfClass(BlindspotSplinterEntity.class, new AABB(center, center).inflate(SPLINTER_SCAN_RADIUS), e -> true).stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(center))).toList()) {
 
+			int age = splinter.getEntityData().get(BlindspotSplinterEntity.DATA_Age);
+
+			// die at last stage
+			if (age >= AGE_LAST) {
+				splinter.kill();
+				continue;
+			}
+
+			boolean isDegraded = age >= AGE_THIRD_TO_LAST;
+			boolean isCritical = age >= AGE_SECOND_TO_LAST;
+
 			Player foundPlayer = (Player) findEntityInWorldRange(world, Player.class, splinter.getX(), splinter.getY(), splinter.getZ(), TARGET_RANGE);
 			if (foundPlayer == null) {
 				splinter.getEntityData().set(BlindspotSplinterEntity.DATA_watchTimer, 0);
 				splinter.getEntityData().set(BlindspotSplinterEntity.DATA_isEnraged, 0);
+				splinter.getPersistentData().putInt(K_RAGE_BONUS, 0);
 				continue;
 			}
 
@@ -106,6 +123,18 @@ public class BlindspotSplinterOnEntityTickUpdateProcedure {
 			int frozenByRose = splinter.getEntityData().get(BlindspotSplinterEntity.DATA_frozenByRose);
 			int isEnraged = splinter.getEntityData().get(BlindspotSplinterEntity.DATA_isEnraged);
 			int watchTimer = splinter.getEntityData().get(BlindspotSplinterEntity.DATA_watchTimer);
+
+			// NEW: decrease threshold by +280 bonus each time hit by player
+			if (splinter.getLastHurtByMob() instanceof Player) {
+				int lastSeenHurtTime = splinter.getPersistentData().getInt(K_LAST_HURT_TIME);
+				int currentHurtTime = splinter.hurtTime;
+				if (currentHurtTime > 0 && currentHurtTime != lastSeenHurtTime) {
+					int bonus = splinter.getPersistentData().getInt(K_RAGE_BONUS) + RAGE_THRESHOLD_HIT_BONUS;
+					splinter.getPersistentData().putInt(K_RAGE_BONUS, bonus);
+					splinter.getPersistentData().putInt(K_LAST_HURT_TIME, currentHurtTime);
+				}
+			}
+			int effectiveRageThreshold = Math.max(1, RAGE_WATCH_THRESHOLD - splinter.getPersistentData().getInt(K_RAGE_BONUS));
 
 			Vec3 toSplinter = splinter.getEyePosition().subtract(foundPlayer.getEyePosition()).normalize();
 			double dot = foundPlayer.getLookAngle().normalize().dot(toSplinter);
@@ -123,7 +152,7 @@ public class BlindspotSplinterOnEntityTickUpdateProcedure {
 			if (isWatched && isEnraged == 0) {
 				watchTimer++;
 				splinter.getEntityData().set(BlindspotSplinterEntity.DATA_watchTimer, watchTimer);
-				if (watchTimer >= RAGE_WATCH_THRESHOLD) {
+				if (watchTimer >= effectiveRageThreshold) {
 					splinter.getEntityData().set(BlindspotSplinterEntity.DATA_isEnraged, 1);
 					splinter.getEntityData().set(BlindspotSplinterEntity.DATA_watchTimer, 0);
 					isEnraged = 1;
@@ -141,7 +170,7 @@ public class BlindspotSplinterOnEntityTickUpdateProcedure {
 			}
 
 			splinter.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(foundPlayer.getX(), foundPlayer.getEyeY(), foundPlayer.getZ()));
-			setSpeed(splinter, ACTIVE_MOVE_SPEED);
+			setSpeed(splinter, isDegraded ? DEGRADED_MOVE_SPEED : ACTIVE_MOVE_SPEED);
 
 			Vec3 splinterEyes = splinter.getEyePosition(1f);
 			Vec3 splinterView = splinter.getViewVector(1f);
@@ -160,7 +189,6 @@ public class BlindspotSplinterOnEntityTickUpdateProcedure {
 					int mineProgress = splinter.getEntityData().get(BlindspotSplinterEntity.DATA_mineProgress) + 1;
 					splinter.getEntityData().set(BlindspotSplinterEntity.DATA_mineProgress, mineProgress);
 
-					// Arm Swing logic
 					if (splinter.tickCount % 6 == 0) {
 						splinter.swing(InteractionHand.MAIN_HAND, true);
 					}
@@ -171,7 +199,9 @@ public class BlindspotSplinterOnEntityTickUpdateProcedure {
 					splinter.getEntityData().set(BlindspotSplinterEntity.DATA_mineZ, trackPos.getZ());
 
 					float speedRef = canMineFeet ? world.getBlockState(feetPos).getDestroySpeed(world, feetPos) : world.getBlockState(facePos).getDestroySpeed(world, facePos);
-					float mineThreshold = speedRef * MINE_SPEED_MULTIPLIER + MINE_SPEED_BASE;
+					float mineThreshold = isDegraded
+						? speedRef * DEGRADED_MINE_SPEED_MULTIPLIER + DEGRADED_MINE_SPEED_BASE
+						: speedRef * MINE_SPEED_MULTIPLIER + MINE_SPEED_BASE;
 
 					if (mineProgress > mineThreshold) {
 						if (canMineFeet) {
@@ -198,23 +228,25 @@ public class BlindspotSplinterOnEntityTickUpdateProcedure {
 				double heightDiff = foundPlayer.getY() - splinter.getY();
 				double horizontalDist = splinter.position().distanceTo(foundPlayer.position());
 
-				if (heightDiff >= 1.4 && horizontalDist < 12) {
-					if (world instanceof ServerLevel serverLevel) {
-						CommandSourceStack src = new CommandSourceStack(CommandSource.NULL, new Vec3(splinter.getX(), splinter.getY(), splinter.getZ()), Vec2.ZERO, serverLevel, 4, "", Component.literal(""), serverLevel.getServer(), null).withSuppressedOutput();
-						serverLevel.getServer().getCommands().performPrefixedCommand(src, "fill ~ ~-1 ~ ~ ~-1 ~ minecraft:oak_planks replace minecraft:air");
-						serverLevel.getServer().getCommands().performPrefixedCommand(src, "fill ~ ~ ~ ~ ~1 ~ minecraft:air replace minecraft:oak_planks");
-					}
-					world.destroyBlock(BlockPos.containing(splinter.getX(), splinter.getY() + 2, splinter.getZ()), false);
-					world.destroyBlock(BlockPos.containing(splinter.getX(), splinter.getY() + 3, splinter.getZ()), false);
-					if (splinter.onGround()) {
-						splinter.setDeltaMovement(new Vec3(splinter.getDeltaMovement().x(), 0.4, splinter.getDeltaMovement().z()));
-					}
-					splinter.fallDistance = 0;
-				} else if (heightDiff > -0.5 && heightDiff < 2.5) {
-					Vec3 look = splinter.getLookAngle();
-					BlockPos bridgePos = BlockPos.containing(splinter.getX() + look.x, splinter.getY() - 1, splinter.getZ() + look.z);
-					if (!(world.getBlockFloorHeight(bridgePos) > 0)) {
-						world.setBlock(bridgePos, Blocks.OAK_PLANKS.defaultBlockState(), 3);
+				if (!isCritical) {
+					if (heightDiff >= 1.4 && horizontalDist < 12) {
+						if (world instanceof ServerLevel serverLevel) {
+							CommandSourceStack src = new CommandSourceStack(CommandSource.NULL, new Vec3(splinter.getX(), splinter.getY(), splinter.getZ()), Vec2.ZERO, serverLevel, 4, "", Component.literal(""), serverLevel.getServer(), null).withSuppressedOutput();
+							serverLevel.getServer().getCommands().performPrefixedCommand(src, "fill ~ ~-1 ~ ~ ~-1 ~ minecraft:oak_planks replace minecraft:air");
+							serverLevel.getServer().getCommands().performPrefixedCommand(src, "fill ~ ~ ~ ~ ~1 ~ minecraft:air replace minecraft:oak_planks");
+						}
+						world.destroyBlock(BlockPos.containing(splinter.getX(), splinter.getY() + 2, splinter.getZ()), false);
+						world.destroyBlock(BlockPos.containing(splinter.getX(), splinter.getY() + 3, splinter.getZ()), false);
+						if (splinter.onGround()) {
+							splinter.setDeltaMovement(new Vec3(splinter.getDeltaMovement().x(), 0.4, splinter.getDeltaMovement().z()));
+						}
+						splinter.fallDistance = 0;
+					} else if (heightDiff > -0.5 && heightDiff < 2.5) {
+						Vec3 look = splinter.getLookAngle();
+						BlockPos bridgePos = BlockPos.containing(splinter.getX() + look.x, splinter.getY() - 1, splinter.getZ() + look.z);
+						if (!(world.getBlockFloorHeight(bridgePos) > 0)) {
+							world.setBlock(bridgePos, Blocks.OAK_PLANKS.defaultBlockState(), 3);
+						}
 					}
 				}
 			}
@@ -228,6 +260,7 @@ public class BlindspotSplinterOnEntityTickUpdateProcedure {
 				setSpeed(splinter, 0);
 				splinter.getEntityData().set(BlindspotSplinterEntity.DATA_isEnraged, 0);
 				splinter.getEntityData().set(BlindspotSplinterEntity.DATA_watchTimer, 0);
+				splinter.getPersistentData().putInt(K_RAGE_BONUS, 0);
 				if (splinter instanceof Mob mob) {
 					mob.getNavigation().stop();
 				}
@@ -269,36 +302,42 @@ public class BlindspotSplinterOnEntityTickUpdateProcedure {
 	private static boolean checkHeldRose(Entity holder, BlindspotSplinterEntity splinter, LevelAccessor world, double x, double y, double z) {
 		if (!(holder instanceof LivingEntity living))
 			return false;
+
 		ItemStack main = living.getMainHandItem();
 		ItemStack off = living.getOffhandItem();
 		boolean mainIsRose = main.getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem();
 		boolean offIsRose = off.getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem();
+
 		if (!mainIsRose && !offIsRose)
 			return false;
+
 		setSpeed(splinter, 0);
 		if (splinter instanceof Mob mob) {
 			mob.getNavigation().stop();
 		}
+
 		if (mainIsRose)
 			tickRoseItem(main, world, x, y, z);
 		if (offIsRose)
 			tickRoseItem(off, world, x, y, z);
+
 		return true;
 	}
 
 	private static void tickRoseItem(ItemStack rose, LevelAccessor world, double x, double y, double z) {
 		double wiltTimer = rose.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getDouble("wilt_timer") + 1;
 		CustomData.update(DataComponents.CUSTOM_DATA, rose, tag -> tag.putDouble("wilt_timer", wiltTimer));
+
 		if (wiltTimer > ROSE_WILT_TICKS) {
-			if (world instanceof Level level) {
-				if (!level.isClientSide()) {
-					level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1, 1);
-				} else {
-					level.playLocalSound(x, y, z, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1, 1, false);
-				}
-			}
-			rose.shrink(1);
-			CustomData.update(DataComponents.CUSTOM_DATA, rose, tag -> tag.putDouble("wilt_timer", 0));
+		    if (world instanceof Level level) {
+		        if (!level.isClientSide()) {
+		            level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1f, 1f);
+		        } else {
+		            level.playLocalSound(x, y, z, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1f, 1f, false);
+		        }
+		    }
+		    rose.shrink(1);
+		    CustomData.update(DataComponents.CUSTOM_DATA, rose, tag -> tag.putDouble("wilt_timer", 0));
 		}
 	}
 

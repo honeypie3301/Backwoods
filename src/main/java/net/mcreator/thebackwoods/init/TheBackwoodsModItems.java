@@ -137,6 +137,10 @@ public class TheBackwoodsModItems {
 	public static final DeferredItem<Item> COBBLED_NULLSTONE_STAIR;
 	public static final DeferredItem<Item> COBBLED_NULLSTONE_WALL;
 	public static final DeferredItem<Item> NULL_POINTERAXE;
+	public static final DeferredItem<Item> STILT_WALKER_SPAWN_EGG;
+	public static final DeferredItem<Item> SCANDERE_LIGNUM;
+	public static final DeferredItem<Item> SCANDERE_LIGNUM_LOG;
+	public static final DeferredItem<Item> LIGNUM_GIGAS_SPAWN_EGG;
 	static {
 		BACKWOODS = REGISTRY.register("backwoods", BackwoodsItem::new);
 		SPLINTER_SPAWN_EGG = REGISTRY.register("splinter_spawn_egg", () -> new DeferredSpawnEggItem(TheBackwoodsModEntities.SPLINTER, -7643606, -3632054, new Item.Properties()));
@@ -214,7 +218,7 @@ public class TheBackwoodsModItems {
 		PETRIFIED_BARK = REGISTRY.register("petrified_bark", PetrifiedBarkItem::new);
 		SHARPENED_SPLINTER_SHARD = REGISTRY.register("sharpened_splinter_shard", SharpenedSplinterShardItem::new);
 		PETRIFIED_ROTTEN_OAK_LOG = block(TheBackwoodsModBlocks.PETRIFIED_ROTTEN_OAK_LOG);
-		PETRIFIED_STRIPPED_ROTTEN_OAK_LOG = block(TheBackwoodsModBlocks.PETRIFIED_STRIPPED_ROTTEN_OAK_LOG, new Item.Properties().rarity(Rarity.UNCOMMON));
+		PETRIFIED_STRIPPED_ROTTEN_OAK_LOG = block(TheBackwoodsModBlocks.PETRIFIED_STRIPPED_ROTTEN_OAK_LOG);
 		PETRIFIED_ROTTEN_AXE = REGISTRY.register("petrified_rotten_axe", PetrifiedRottenAxeItem::new);
 		PETRIFIED_ROTTEN_OAK_PLANKS = block(TheBackwoodsModBlocks.PETRIFIED_ROTTEN_OAK_PLANKS);
 		PETRIFIED_ROTTEN_OAK_STAIRS = block(TheBackwoodsModBlocks.PETRIFIED_ROTTEN_OAK_STAIRS);
@@ -256,6 +260,10 @@ public class TheBackwoodsModItems {
 		COBBLED_NULLSTONE_STAIR = block(TheBackwoodsModBlocks.COBBLED_NULLSTONE_STAIR);
 		COBBLED_NULLSTONE_WALL = block(TheBackwoodsModBlocks.COBBLED_NULLSTONE_WALL);
 		NULL_POINTERAXE = REGISTRY.register("null_pointeraxe", NullPointeraxeItem::new);
+		STILT_WALKER_SPAWN_EGG = REGISTRY.register("stilt_walker_spawn_egg", () -> new DeferredSpawnEggItem(TheBackwoodsModEntities.STILT_WALKER, -7643606, -13619152, new Item.Properties()));
+		SCANDERE_LIGNUM = block(TheBackwoodsModBlocks.SCANDERE_LIGNUM);
+		SCANDERE_LIGNUM_LOG = block(TheBackwoodsModBlocks.SCANDERE_LIGNUM_LOG);
+		LIGNUM_GIGAS_SPAWN_EGG = REGISTRY.register("lignum_gigas_spawn_egg", () -> new DeferredSpawnEggItem(TheBackwoodsModEntities.LIGNUM_GIGAS, -3632054, -7643606, new Item.Properties()));
 	}
 
 	// Start of user code block custom items

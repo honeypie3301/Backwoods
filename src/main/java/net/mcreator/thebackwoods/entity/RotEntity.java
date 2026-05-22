@@ -9,9 +9,12 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.BreakDoorGoal;
@@ -68,15 +71,18 @@ public class RotEntity extends Monster {
 	@Override
 	protected void registerGoals() {
 		super.registerGoals();
-		this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, (float) 6));
-		this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1, false) {
+		this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.2, false) {
 			@Override
 			protected boolean canPerformAttack(LivingEntity entity) {
-				return this.isTimeToAttack() && this.mob.distanceToSqr(entity) < (this.mob.getBbWidth() * this.mob.getBbWidth() + entity.getBbWidth()) && this.mob.getSensing().hasLineOfSight(entity);
+				return this.isTimeToAttack() && this.mob.distanceToSqr(entity) < 25 && this.mob.getSensing().hasLineOfSight(entity);
 			}
 		});
-		this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Player.class, true, false));
-		this.goalSelector.addGoal(4, new BreakDoorGoal(this, e -> true));
+		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal(this, Mob.class, true, false));
+		this.goalSelector.addGoal(3, new RandomStrollGoal(this, 0.6));
+		this.targetSelector.addGoal(4, new HurtByTargetGoal(this));
+		this.targetSelector.addGoal(5, new NearestAttackableTargetGoal(this, Player.class, true, false));
+		this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, (float) 32));
+		this.goalSelector.addGoal(7, new BreakDoorGoal(this, e -> true));
 	}
 
 	@Override
@@ -121,6 +127,8 @@ public class RotEntity extends Monster {
 
 		RotEntityIsHurtProcedure.execute(world, x, y, z, entity);
 		if (damagesource.is(DamageTypes.IN_FIRE))
+			return false;
+		if (damagesource.getDirectEntity() instanceof AbstractArrow)
 			return false;
 		if (damagesource.is(DamageTypes.FALL))
 			return false;

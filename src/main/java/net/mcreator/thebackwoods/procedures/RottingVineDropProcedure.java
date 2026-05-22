@@ -35,7 +35,7 @@ public class RottingVineDropProcedure {
 			return;
 		if ((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:rotting"))) {
 			if ((world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == Blocks.VINE) {
-				if (Math.random() < (1) / ((float) 32)) {
+				if (Math.random() < 0.3125) {
 					if (world instanceof ServerLevel _level) {
 						ItemEntity entityToSpawn = new ItemEntity(_level, x, y, z, new ItemStack(Items.STRING));
 						entityToSpawn.setPickUpDelay(10);

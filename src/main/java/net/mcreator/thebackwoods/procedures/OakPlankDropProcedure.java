@@ -38,7 +38,7 @@ public class OakPlankDropProcedure {
 		if ((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:backwoods"))
 				|| (entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:the_still"))) {
 			if ((world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == Blocks.OAK_PLANKS || (world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == TheBackwoodsModBlocks.ROTTEN_OAK_WOOD.get()) {
-				if (Math.random() < (1) / ((float) 40)) {
+				if (Math.random() == 0.025) {
 					if (world instanceof ServerLevel _level) {
 						ItemEntity entityToSpawn = new ItemEntity(_level, x, y, z, new ItemStack(TheBackwoodsModItems.SEEP.get()));
 						entityToSpawn.setPickUpDelay(20);

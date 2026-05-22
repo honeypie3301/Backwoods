@@ -10,6 +10,12 @@
       "offset": 8,
       "block_search_extent": 2
     },
+    "music": {
+      "sound": "the_backwoods:familiar_mood2",
+      "min_delay": 12000,
+      "max_delay": 24000,
+      "replace_current_music": true
+    },
     "foliage_color": -9919388,
     "grass_color": -7948413,
     "sky_color": 7972607,

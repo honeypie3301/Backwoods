@@ -7,7 +7,6 @@ import net.neoforged.bus.api.Event;
 
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
@@ -34,14 +33,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.CommandSource;
-import net.minecraft.client.Minecraft;
 
 import net.mcreator.thebackwoods.network.TheBackwoodsModVariables;
 import net.mcreator.thebackwoods.init.TheBackwoodsModBlocks;
 
 import javax.annotation.Nullable;
-
-import java.util.Comparator;
 
 @EventBusSubscriber
 public class MentalDegradationProcedure {
@@ -74,7 +70,7 @@ public class MentalDegradationProcedure {
 						_vars.markSyncDirty();
 					}
 				}
-				if (Math.random() < (1) / ((float) 6000)) {
+				if (Math.random() < 0.00016) {
 					if (entity instanceof ServerPlayer _player && !_player.level().isClientSide()) {
 						ResourceKey<Level> destinationType = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:the_grain"));
 						if (_player.level().dimension() == destinationType)
@@ -90,7 +86,7 @@ public class MentalDegradationProcedure {
 						}
 					}
 				}
-				if (Math.random() < (1) / ((float) 7500)) {
+				if (Math.random() < 0.0001333) {
 					if (entity instanceof ServerPlayer _player && !_player.level().isClientSide()) {
 						ResourceKey<Level> destinationType = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:loss"));
 						if (_player.level().dimension() == destinationType)
@@ -106,7 +102,7 @@ public class MentalDegradationProcedure {
 						}
 					}
 				}
-				if (Math.random() < (1) / ((float) 15)) {
+				if (Math.random() < 0.0666) {
 					targetX = entity.getX() + Mth.nextInt(RandomSource.create(), -3, 3);
 					targetY = entity.getY() + Mth.nextInt(RandomSource.create(), -1, 3);
 					targetZ = entity.getZ() + Mth.nextInt(RandomSource.create(), -3, 3);
@@ -117,19 +113,6 @@ public class MentalDegradationProcedure {
 								_level.playSound(null, BlockPos.containing(targetX, targetY, targetZ), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.cherry_wood.place")), SoundSource.BLOCKS, 1, 1);
 							} else {
 								_level.playLocalSound(targetX, targetY, targetZ, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.cherry_wood.place")), SoundSource.BLOCKS, 1, 1, false);
-							}
-						}
-					}
-				}
-				if (Math.random() < (1) / ((float) 3500)) {
-					{
-						final Vec3 _center = new Vec3((entity.getX()), (entity.getY()), (entity.getZ()));
-						for (Entity entityiterator : world.getEntitiesOfClass(Entity.class, new AABB(_center, _center).inflate(128 / 2d), e -> true).stream().sorted(Comparator.comparingDouble(_entcnd -> _entcnd.distanceToSqr(_center))).toList()) {
-							if (!(entityiterator instanceof Player) && entityiterator instanceof LivingEntity) {
-								if (!(entity instanceof LivingEntity _entity ? _entity.hasLineOfSight(entityiterator) : false)) {
-									if (!entityiterator.level().isClientSide())
-										entityiterator.discard();
-								}
 							}
 						}
 					}
@@ -145,11 +128,11 @@ public class MentalDegradationProcedure {
 						_vars.markSyncDirty();
 					}
 				}
-				if (Math.random() < (1) / ((float) 2100)) {
+				if (Math.random() < 0.00047) {
 					if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
 						_entity.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 70, 1, false, false));
 				}
-				if (Math.random() < (1) / ((float) 500)) {
+				if (Math.random() < 0.002) {
 					if (world instanceof Level _level) {
 						if (!_level.isClientSide()) {
 							_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:degradation_o1")), SoundSource.MUSIC, (float) 0.67, 1);
@@ -158,27 +141,10 @@ public class MentalDegradationProcedure {
 						}
 					}
 				}
-				if (Math.random() < (1) / ((float) 1500)) {
+				if (Math.random() < 0.00069) {
 					entity.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3((x + Mth.nextDouble(RandomSource.create(), -5, 5)), (y + Mth.nextDouble(RandomSource.create(), -5, 5)), (z + Mth.nextDouble(RandomSource.create(), -5, 5))));
 				}
-				if (Math.random() < (1) / ((float) 2450)) {
-					entity.getPersistentData().putDouble("original_rd", ((int) (Minecraft.getInstance().options.renderDistance().get())));
-					entity.getPersistentData().putDouble("rd_timer", 60);
-					Minecraft.getInstance().options.renderDistance().set(2);
-					if (world instanceof ServerLevel _level)
-						_level.getServer().getCommands().performPrefixedCommand(new CommandSourceStack(CommandSource.NULL, new Vec3(x, y, z), Vec2.ZERO, _level, 4, "", Component.literal(""), _level.getServer(), null).withSuppressedOutput(),
-								"stopsound @s music");
-					if (world instanceof Level _level) {
-						if (!_level.isClientSide()) {
-							_level.playSound(null, BlockPos.containing(entity.getX() + Mth.nextDouble(RandomSource.create(), -5, 5), entity.getY(), entity.getZ() + Mth.nextDouble(RandomSource.create(), -5, 5)),
-									BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("ambient.cave")), SoundSource.MUSIC, 2, (float) 0.8);
-						} else {
-							_level.playLocalSound((entity.getX() + Mth.nextDouble(RandomSource.create(), -5, 5)), (entity.getY()), (entity.getZ() + Mth.nextDouble(RandomSource.create(), -5, 5)),
-									BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("ambient.cave")), SoundSource.MUSIC, 2, (float) 0.8, false);
-						}
-					}
-				}
-				if (Math.random() < (1) / ((float) 1500)) {
+				if (Math.random() < 0.000666) {
 					random_sound = Mth.nextInt(RandomSource.create(), 0, 4);
 					if (random_sound == 0) {
 						if (world instanceof ServerLevel _level)
@@ -261,7 +227,7 @@ public class MentalDegradationProcedure {
 						_vars.markSyncDirty();
 					}
 				}
-				if (Math.random() < (1) / ((float) 2450)) {
+				if (Math.random() < 0.00069) {
 					if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
 						_entity.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 60, 1, false, false));
 					if (world instanceof Level _level) {
@@ -271,7 +237,7 @@ public class MentalDegradationProcedure {
 							_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("ambient.cave")), SoundSource.AMBIENT, 2, (float) 0.8, false);
 						}
 					}
-				} else if (Math.random() < (1) / ((float) 3000)) {
+				} else if (Math.random() < 0.000333) {
 					if (world instanceof Level _level) {
 						if (!_level.isClientSide()) {
 							_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:whisper1")), SoundSource.MUSIC, (float) 0.7, 1);
@@ -279,7 +245,7 @@ public class MentalDegradationProcedure {
 							_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:whisper1")), SoundSource.MUSIC, (float) 0.7, 1, false);
 						}
 					}
-				} else if (Math.random() < (1) / ((float) 2500)) {
+				} else if (Math.random() < 0.0004) {
 					if (world instanceof Level _level) {
 						if (!_level.isClientSide()) {
 							_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:whisper3")), SoundSource.MUSIC, (float) 0.7, 1);
@@ -287,7 +253,7 @@ public class MentalDegradationProcedure {
 							_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:whisper3")), SoundSource.MUSIC, (float) 0.7, 1, false);
 						}
 					}
-				} else if (Math.random() < (1) / ((float) 1750)) {
+				} else if (Math.random() < 0.000571) {
 					if (world instanceof Level _level) {
 						if (!_level.isClientSide()) {
 							_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:whisper2")), SoundSource.MUSIC, (float) 0.7, 1);
@@ -295,7 +261,7 @@ public class MentalDegradationProcedure {
 							_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:whisper2")), SoundSource.MUSIC, (float) 0.7, 1, false);
 						}
 					}
-				} else if (Math.random() < (1) / ((float) 2000)) {
+				} else if (Math.random() < 0.0005) {
 					if (world instanceof Level _level) {
 						if (!_level.isClientSide()) {
 							_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:whisper4")), SoundSource.MUSIC, (float) 0.7, 1);
@@ -305,7 +271,7 @@ public class MentalDegradationProcedure {
 					}
 				}
 			} else if (entity.getPersistentData().getDouble("backwoods_time") >= 6000) {
-				if (Math.random() < (1) / ((float) 2300)) {
+				if (Math.random() < 0.00043) {
 					if (world instanceof Level _level) {
 						if (!_level.isClientSide()) {
 							_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:whisper1")), SoundSource.MUSIC, (float) 0.7, 1);
@@ -313,7 +279,7 @@ public class MentalDegradationProcedure {
 							_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:whisper1")), SoundSource.MUSIC, (float) 0.7, 1, false);
 						}
 					}
-				} else if (Math.random() < (1) / ((float) 4500)) {
+				} else if (Math.random() < 0.0002222) {
 					if (world instanceof Level _level) {
 						if (!_level.isClientSide()) {
 							_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:whisper5")), SoundSource.MUSIC, (float) 0.7, 1);
@@ -321,12 +287,6 @@ public class MentalDegradationProcedure {
 							_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:whisper5")), SoundSource.MUSIC, (float) 0.7, 1, false);
 						}
 					}
-				}
-			}
-			if (entity.getPersistentData().getDouble("rd_timer") > 0) {
-				entity.getPersistentData().putDouble("rd_timer", (entity.getPersistentData().getDouble("rd_timer") - 1));
-				if (entity.getPersistentData().getDouble("rd_timer") == 0) {
-					Minecraft.getInstance().options.renderDistance().set(((int) (entity.getPersistentData().getDouble("original_rd"))));
 				}
 			}
 			if (entity.getPersistentData().getDouble("debug_mode") == 1) {

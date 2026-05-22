@@ -6,7 +6,7 @@ import net.mcreator.thebackwoods.init.TheBackwoodsModBlocks;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.bus.api.Event;
-
+// 1.21.1 neoforge
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.HitResult;
@@ -42,256 +42,291 @@ import java.util.Comparator;
 @EventBusSubscriber
 public class LogSplinterOnEntityTickUpdateProcedure {
 
-    private static final double WATCH_DOT_THRESHOLD = 0.5;
-    private static final double ACTIVE_MOVE_SPEED = 0.335;
-    private static final float MINE_SPEED_MULTIPLIER = 40f;
-    private static final float MINE_SPEED_BASE = 40f;
-    private static final float MAX_BREAKABLE_HARDNESS = 50f;
-    private static final double LOG_SPLINTER_SCAN_RADIUS = 28;
-    private static final double TARGET_RANGE = 56;
-    private static final double MINE_RAY_DISTANCE = 3.0;
-    private static final double ROSE_WILT_TICKS = 750;
-    private static final int ROSE_SCAN_XZ = 6;
-    private static final int ROSE_SCAN_Y = 3;
+	private static final double WATCH_DOT_THRESHOLD = 0.5;
+	private static final double ACTIVE_MOVE_SPEED = 0.335;
+	private static final double DEGRADED_MOVE_SPEED = 0.20;
+	private static final float MINE_SPEED_MULTIPLIER = 40f;
+	private static final float MINE_SPEED_BASE = 40f;
+	private static final float DEGRADED_MINE_SPEED_MULTIPLIER = 80f;
+	private static final float DEGRADED_MINE_SPEED_BASE = 80f;
+	private static final float MAX_BREAKABLE_HARDNESS = 50f;
+	private static final double LOG_SPLINTER_SCAN_RADIUS = 28;
+	private static final double TARGET_RANGE = 56;
+	private static final double MINE_RAY_DISTANCE = 3.0;
+	private static final double ROSE_WILT_TICKS = 750;
+	private static final int ROSE_SCAN_XZ = 6;
+	private static final int ROSE_SCAN_Y = 3;
+	private static final int RAGE_WATCH_THRESHOLD = 590;
+	private static final int RAGE_THRESHOLD_HIT_BONUS = 150;
+	private static final double RAGE_ESCAPE_RANGE = 18.0;
 
-    // How many ticks the player must stare before rage triggers
-    private static final int RAGE_WATCH_THRESHOLD = 590;
+	private static final String K_RAGE_BONUS = "rage_watch_bonus";
+	private static final String K_LAST_HURT_TIME = "rage_last_hurt_time";
 
-    // Log Splinter must be beyond this range for rage to end
-    private static final double RAGE_ESCAPE_RANGE = 18.0;
+	// age thresholds from display condition procedures
+	private static final int AGE_THIRD_TO_LAST = 360000;  // stage 6 - slow mining + speed
+	private static final int AGE_SECOND_TO_LAST = 420000; // stage 7 - stop bridging
+	private static final int AGE_LAST = 480000;           // stage 8 - die
 
-    @SubscribeEvent
-    public static void onEntityTick(EntityTickEvent.Pre event) {
-        execute(event, event.getEntity().level(), event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getEntity());
-    }
+	@SubscribeEvent
+	public static void onEntityTick(EntityTickEvent.Pre event) {
+		execute(event, event.getEntity().level(), event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getEntity());
+	}
 
-    public static void execute(LevelAccessor world, double x, double y, double z, Entity entity) {
-        execute(null, world, x, y, z, entity);
-    }
+	public static void execute(LevelAccessor world, double x, double y, double z, Entity entity) {
+		execute(null, world, x, y, z, entity);
+	}
 
-    private static void execute(@Nullable Event event, LevelAccessor world, double x, double y, double z, Entity entity) {
-        if (entity == null || !(entity instanceof LogSplinterEntity))
-            return;
+	private static void execute(@Nullable Event event, LevelAccessor world, double x, double y, double z, Entity entity) {
+		if (entity == null || !(entity instanceof LogSplinterEntity))
+			return;
 
-        // 1. Force the Splinter to jump out of boats
-        if (entity.isPassenger()) {
-            Entity vehicle = entity.getVehicle();
-            if (vehicle instanceof net.minecraft.world.entity.vehicle.Boat || vehicle instanceof net.minecraft.world.entity.vehicle.ChestBoat) {
-                entity.stopRiding();
-                entity.setDeltaMovement(entity.getDeltaMovement().add(0, 0.2, 0));
-            }
-        }
+		if (entity.isPassenger()) {
+			Entity vehicle = entity.getVehicle();
+			if (vehicle instanceof net.minecraft.world.entity.vehicle.Boat || vehicle instanceof net.minecraft.world.entity.vehicle.ChestBoat) {
+				entity.stopRiding();
+				entity.setDeltaMovement(entity.getDeltaMovement().add(0, 0.2, 0));
+			}
+		}
 
-        final Vec3 center = new Vec3(x, y, z);
+		final Vec3 center = new Vec3(x, y, z);
 
-        for (LogSplinterEntity logSplinter : world.getEntitiesOfClass(LogSplinterEntity.class, new AABB(center, center).inflate(LOG_SPLINTER_SCAN_RADIUS), e -> true)
-                .stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(center))).toList()) {
+		for (LogSplinterEntity logSplinter : world.getEntitiesOfClass(LogSplinterEntity.class, new AABB(center, center).inflate(LOG_SPLINTER_SCAN_RADIUS), e -> true)
+				.stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(center))).toList()) {
 
-            Player foundPlayer = (Player) findEntityInWorldRange(world, Player.class, logSplinter.getX(), logSplinter.getY(), logSplinter.getZ(), TARGET_RANGE);
-            if (foundPlayer == null) {
-                logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
-                logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
-                continue;
-            }
+			int age = logSplinter.getEntityData().get(LogSplinterEntity.DATA_Age);
 
-            int frozenByRose = logSplinter.getEntityData().get(LogSplinterEntity.DATA_frozenByRose);
-            int isEnraged = logSplinter.getEntityData().get(LogSplinterEntity.DATA_isEnraged);
-            int watchTimer = logSplinter.getEntityData().get(LogSplinterEntity.DATA_watchTimer);
+			// die at last stage
+			if (age >= AGE_LAST) {
+				logSplinter.kill();
+				continue;
+			}
 
-            Vec3 toLogSplinter = logSplinter.getEyePosition().subtract(foundPlayer.getEyePosition()).normalize();
-            double dot = foundPlayer.getLookAngle().normalize().dot(toLogSplinter);
-            boolean facing = dot > WATCH_DOT_THRESHOLD;
-            boolean canSee = foundPlayer.hasLineOfSight(logSplinter);
-            boolean isWatched = facing && canSee;
+			boolean isDegraded = age >= AGE_THIRD_TO_LAST;
+			boolean isCritical = age >= AGE_SECOND_TO_LAST;
 
-            double distToPlayer = logSplinter.position().distanceTo(foundPlayer.position());
-            if (isEnraged == 1 && distToPlayer > RAGE_ESCAPE_RANGE) {
-                logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
-                logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
-                isEnraged = 0;
-            }
+			Player foundPlayer = (Player) findEntityInWorldRange(world, Player.class, logSplinter.getX(), logSplinter.getY(), logSplinter.getZ(), TARGET_RANGE);
+			if (foundPlayer == null) {
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
+				logSplinter.getPersistentData().putInt(K_RAGE_BONUS, 0);
+				continue;
+			}
 
-            if (isWatched && isEnraged == 0) {
-                watchTimer++;
-                logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, watchTimer);
-                if (watchTimer >= RAGE_WATCH_THRESHOLD) {
-                    logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 1);
-                    logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
-                    isEnraged = 1;
-                }
-            } else if (!isWatched && isEnraged == 0) {
-                logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
-            }
+			int frozenByRose = logSplinter.getEntityData().get(LogSplinterEntity.DATA_frozenByRose);
+			int isEnraged = logSplinter.getEntityData().get(LogSplinterEntity.DATA_isEnraged);
+			int watchTimer = logSplinter.getEntityData().get(LogSplinterEntity.DATA_watchTimer);
 
-            if ((isWatched && isEnraged == 0) || frozenByRose == 1) {
-                setSpeed(logSplinter, 0);
-                if (logSplinter instanceof Mob mob) {
-                    mob.getNavigation().stop();
-                }
-                continue;
-            }
+			// NEW: decrease threshold by +280 bonus each time hit by player
+			if (logSplinter.getLastHurtByMob() instanceof Player) {
+				int lastSeenHurtTime = logSplinter.getPersistentData().getInt(K_LAST_HURT_TIME);
+				int currentHurtTime = logSplinter.hurtTime;
+				if (currentHurtTime > 0 && currentHurtTime != lastSeenHurtTime) {
+					int bonus = logSplinter.getPersistentData().getInt(K_RAGE_BONUS) + RAGE_THRESHOLD_HIT_BONUS;
+					logSplinter.getPersistentData().putInt(K_RAGE_BONUS, bonus);
+					logSplinter.getPersistentData().putInt(K_LAST_HURT_TIME, currentHurtTime);
+				}
+			}
+			int effectiveRageThreshold = Math.max(1, RAGE_WATCH_THRESHOLD - logSplinter.getPersistentData().getInt(K_RAGE_BONUS));
 
-            logSplinter.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(foundPlayer.getX(), foundPlayer.getEyeY(), foundPlayer.getZ()));
-            setSpeed(logSplinter, ACTIVE_MOVE_SPEED);
+			Vec3 toLogSplinter = logSplinter.getEyePosition().subtract(foundPlayer.getEyePosition()).normalize();
+			double dot = foundPlayer.getLookAngle().normalize().dot(toLogSplinter);
+			boolean facing = dot > WATCH_DOT_THRESHOLD;
+			boolean canSee = foundPlayer.hasLineOfSight(logSplinter);
+			boolean isWatched = facing && canSee;
 
-            Vec3 logEyes = logSplinter.getEyePosition(1f);
-            Vec3 logView = logSplinter.getViewVector(1f);
-            Vec3 blockCheckTarget = logEyes.add(logView.scale(MINE_RAY_DISTANCE));
+			double distToPlayer = logSplinter.position().distanceTo(foundPlayer.position());
+			if (isEnraged == 1 && distToPlayer > RAGE_ESCAPE_RANGE) {
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+				isEnraged = 0;
+			}
 
-            HitResult hit = world.clip(new ClipContext(logEyes, blockCheckTarget, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, logSplinter));
+			if (isWatched && isEnraged == 0) {
+				watchTimer++;
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, watchTimer);
+				if (watchTimer >= effectiveRageThreshold) {
+					logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 1);
+					logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+					isEnraged = 1;
+				}
+			} else if (!isWatched && isEnraged == 0) {
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+			}
 
-            if (hit.getType() == HitResult.Type.BLOCK) {
-                BlockPos facePos = ((BlockHitResult) hit).getBlockPos();
-                BlockPos feetPos = new BlockPos(facePos.getX(), Mth.floor(logSplinter.getY()), facePos.getZ());
+			if ((isWatched && isEnraged == 0) || frozenByRose == 1) {
+				setSpeed(logSplinter, 0);
+				if (logSplinter instanceof Mob mob) {
+					mob.getNavigation().stop();
+				}
+				continue;
+			}
 
-                boolean canMineFeet = canMine(world, feetPos, foundPlayer);
-                boolean canMineFace = canMine(world, facePos, foundPlayer);
+			logSplinter.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(foundPlayer.getX(), foundPlayer.getEyeY(), foundPlayer.getZ()));
+			setSpeed(logSplinter, isDegraded ? DEGRADED_MOVE_SPEED : ACTIVE_MOVE_SPEED);
 
-                if (canMineFeet || canMineFace) {
-                    int mineProgress = logSplinter.getEntityData().get(LogSplinterEntity.DATA_mineProgress) + 1;
-                    logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, mineProgress);
+			Vec3 logEyes = logSplinter.getEyePosition(1f);
+			Vec3 logView = logSplinter.getViewVector(1f);
+			Vec3 blockCheckTarget = logEyes.add(logView.scale(MINE_RAY_DISTANCE));
 
-                    // --- ADDED: Swing main arm while mining ---
-                    if (logSplinter.tickCount % 6 == 0) {
-                        logSplinter.swing(InteractionHand.MAIN_HAND);
-                    }
+			HitResult hit = world.clip(new ClipContext(logEyes, blockCheckTarget, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, logSplinter));
 
-                    BlockPos trackPos = canMineFeet ? feetPos : facePos;
-                    logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineX, trackPos.getX());
-                    logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineY, trackPos.getY());
-                    logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineZ, trackPos.getZ());
+			if (hit.getType() == HitResult.Type.BLOCK) {
+				BlockPos facePos = ((BlockHitResult) hit).getBlockPos();
+				BlockPos feetPos = new BlockPos(facePos.getX(), Mth.floor(logSplinter.getY()), facePos.getZ());
 
-                    float speedRef = canMineFeet ? world.getBlockState(feetPos).getDestroySpeed(world, feetPos) : world.getBlockState(facePos).getDestroySpeed(world, facePos);
-                    float mineThreshold = speedRef * MINE_SPEED_MULTIPLIER + MINE_SPEED_BASE;
+				boolean canMineFeet = canMine(world, feetPos, foundPlayer);
+				boolean canMineFace = canMine(world, facePos, foundPlayer);
 
-                    if (mineProgress > mineThreshold) {
-                        if (canMineFeet) {
-                            world.destroyBlock(feetPos, false);
-                        }
-                        if (canMineFace) {
-                            world.destroyBlock(facePos, false);
-                        }
-                        if (logSplinter instanceof Mob mob) {
-                            mob.getNavigation().stop();
-                        }
-                        logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
-                    }
-                } else {
-                    logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
-                }
-            } else {
-                logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
+				if (canMineFeet || canMineFace) {
+					int mineProgress = logSplinter.getEntityData().get(LogSplinterEntity.DATA_mineProgress) + 1;
+					logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, mineProgress);
 
-                double heightDiff = foundPlayer.getY() - logSplinter.getY();
-                double horizontalDist = logSplinter.position().distanceTo(foundPlayer.position());
+					if (logSplinter.tickCount % 6 == 0) {
+						logSplinter.swing(InteractionHand.MAIN_HAND);
+					}
 
-                if (heightDiff >= 1.4 && horizontalDist < 12) {
-                    if (world instanceof ServerLevel serverLevel) {
-                        CommandSourceStack src = new CommandSourceStack(CommandSource.NULL, new Vec3(logSplinter.getX(), logSplinter.getY(), logSplinter.getZ()), Vec2.ZERO, serverLevel, 4, "", Component.literal(""), serverLevel.getServer(), null).withSuppressedOutput();
-                        serverLevel.getServer().getCommands().performPrefixedCommand(src, "fill ~ ~-1 ~ ~ ~-1 ~ minecraft:oak_planks replace minecraft:air");
-                        serverLevel.getServer().getCommands().performPrefixedCommand(src, "fill ~ ~ ~ ~ ~1 ~ minecraft:air replace minecraft:oak_planks");
-                    }
-                    world.destroyBlock(BlockPos.containing(logSplinter.getX(), logSplinter.getY() + 2, logSplinter.getZ()), false);
-                    world.destroyBlock(BlockPos.containing(logSplinter.getX(), logSplinter.getY() + 3, logSplinter.getZ()), false);
-                    if (logSplinter.onGround()) {
-                        logSplinter.setDeltaMovement(new Vec3(logSplinter.getDeltaMovement().x(), 0.4, logSplinter.getDeltaMovement().z()));
-                    }
-                    logSplinter.fallDistance = 0;
-                } else if (heightDiff > -0.5 && heightDiff < 2.5) {
-                    Vec3 look = logSplinter.getLookAngle();
-                    BlockPos bridgePos = BlockPos.containing(logSplinter.getX() + look.x, logSplinter.getY() - 1, logSplinter.getZ() + look.z);
-                    if (!(world.getBlockFloorHeight(bridgePos) > 0)) {
-                        world.setBlock(bridgePos, Blocks.OAK_WOOD.defaultBlockState(), 3);
-                    }
-                }
-            }
+					BlockPos trackPos = canMineFeet ? feetPos : facePos;
+					logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineX, trackPos.getX());
+					logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineY, trackPos.getY());
+					logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineZ, trackPos.getZ());
 
-            boolean foundRose = checkHeldRose(foundPlayer, logSplinter, world, foundPlayer.getX(), foundPlayer.getY(), foundPlayer.getZ());
-            if (!foundRose && logSplinter.tickCount % 5 == 0) {
-                foundRose = checkNearbyRoseBlocks(world, logSplinter);
-            }
+					float speedRef = canMineFeet ? world.getBlockState(feetPos).getDestroySpeed(world, feetPos) : world.getBlockState(facePos).getDestroySpeed(world, facePos);
+					float mineThreshold = isDegraded
+						? speedRef * DEGRADED_MINE_SPEED_MULTIPLIER + DEGRADED_MINE_SPEED_BASE
+						: speedRef * MINE_SPEED_MULTIPLIER + MINE_SPEED_BASE;
 
-            if (foundRose) {
-                setSpeed(logSplinter, 0);
-                logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
-                logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
-                if (logSplinter instanceof Mob mob) {
-                    mob.getNavigation().stop();
-                }
-            }
-        }
-    }
+					if (mineProgress > mineThreshold) {
+						if (canMineFeet) {
+							world.destroyBlock(feetPos, false);
+						}
+						if (canMineFace) {
+							world.destroyBlock(facePos, false);
+						}
+						if (logSplinter instanceof Mob mob) {
+							mob.getNavigation().stop();
+						}
+						logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
+					}
+				} else {
+					logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
+				}
+			} else {
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
 
-    private static void setSpeed(LivingEntity entity, double speed) {
-        if (entity.getAttributes().hasAttribute(Attributes.MOVEMENT_SPEED)) {
-            entity.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(speed);
-        }
-    }
+				double heightDiff = foundPlayer.getY() - logSplinter.getY();
+				double horizontalDist = logSplinter.position().distanceTo(foundPlayer.position());
 
-    private static boolean canMine(LevelAccessor world, BlockPos pos, Player player) {
-        float speed = world.getBlockState(pos).getDestroySpeed(world, pos);
-        if (speed < 0 || speed >= MAX_BREAKABLE_HARDNESS)
-            return false;
-        if (pos.getY() == (int) (player.getY() - 2))
-            return false;
-        return !world.getBlockState(pos).isAir();
-    }
+				if (!isCritical) {
+					if (heightDiff >= 1.4 && horizontalDist < 12) {
+						if (world instanceof ServerLevel serverLevel) {
+							CommandSourceStack src = new CommandSourceStack(CommandSource.NULL, new Vec3(logSplinter.getX(), logSplinter.getY(), logSplinter.getZ()), Vec2.ZERO, serverLevel, 4, "", Component.literal(""), serverLevel.getServer(), null).withSuppressedOutput();
+							serverLevel.getServer().getCommands().performPrefixedCommand(src, "fill ~ ~-1 ~ ~ ~-1 ~ minecraft:oak_planks replace minecraft:air");
+							serverLevel.getServer().getCommands().performPrefixedCommand(src, "fill ~ ~ ~ ~ ~1 ~ minecraft:air replace minecraft:oak_planks");
+						}
+						world.destroyBlock(BlockPos.containing(logSplinter.getX(), logSplinter.getY() + 2, logSplinter.getZ()), false);
+						world.destroyBlock(BlockPos.containing(logSplinter.getX(), logSplinter.getY() + 3, logSplinter.getZ()), false);
+						if (logSplinter.onGround()) {
+							logSplinter.setDeltaMovement(new Vec3(logSplinter.getDeltaMovement().x(), 0.4, logSplinter.getDeltaMovement().z()));
+						}
+						logSplinter.fallDistance = 0;
+					} else if (heightDiff > -0.5 && heightDiff < 2.5) {
+						Vec3 look = logSplinter.getLookAngle();
+						BlockPos bridgePos = BlockPos.containing(logSplinter.getX() + look.x, logSplinter.getY() - 1, logSplinter.getZ() + look.z);
+						if (!(world.getBlockFloorHeight(bridgePos) > 0)) {
+							world.setBlock(bridgePos, Blocks.OAK_WOOD.defaultBlockState(), 3);
+						}
+					}
+				}
+			}
 
-    private static boolean checkHeldRose(Entity holder, LogSplinterEntity logSplinter, LevelAccessor world, double x, double y, double z) {
-        if (!(holder instanceof LivingEntity living))
-            return false;
+			boolean foundRose = checkHeldRose(foundPlayer, logSplinter, world, foundPlayer.getX(), foundPlayer.getY(), foundPlayer.getZ());
+			if (!foundRose && logSplinter.tickCount % 5 == 0) {
+				foundRose = checkNearbyRoseBlocks(world, logSplinter);
+			}
 
-        ItemStack main = living.getMainHandItem();
-        ItemStack off = living.getOffhandItem();
+			if (foundRose) {
+				setSpeed(logSplinter, 0);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+				logSplinter.getPersistentData().putInt(K_RAGE_BONUS, 0);
+				if (logSplinter instanceof Mob mob) {
+					mob.getNavigation().stop();
+				}
+			}
+		}
+	}
 
-        boolean mainIsRose = main.getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem();
-        boolean offIsRose = off.getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem();
+	private static void setSpeed(LivingEntity entity, double speed) {
+		if (entity.getAttributes().hasAttribute(Attributes.MOVEMENT_SPEED)) {
+			entity.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(speed);
+		}
+	}
 
-        if (!mainIsRose && !offIsRose)
-            return false;
+	private static boolean canMine(LevelAccessor world, BlockPos pos, Player player) {
+		float speed = world.getBlockState(pos).getDestroySpeed(world, pos);
+		if (speed < 0 || speed >= MAX_BREAKABLE_HARDNESS)
+			return false;
+		if (pos.getY() == (int) (player.getY() - 2))
+			return false;
+		return !world.getBlockState(pos).isAir();
+	}
 
-        setSpeed(logSplinter, 0);
-        if (logSplinter instanceof Mob mob) {
-            mob.getNavigation().stop();
-        }
+	private static boolean checkHeldRose(Entity holder, LogSplinterEntity logSplinter, LevelAccessor world, double x, double y, double z) {
+		if (!(holder instanceof LivingEntity living))
+			return false;
 
-        if (mainIsRose)
-            tickRoseItem(main, world, x, y, z);
-        if (offIsRose)
-            tickRoseItem(off, world, x, y, z);
+		ItemStack main = living.getMainHandItem();
+		ItemStack off = living.getOffhandItem();
 
-        return true;
-    }
+		boolean mainIsRose = main.getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem();
+		boolean offIsRose = off.getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem();
 
-    private static void tickRoseItem(ItemStack rose, LevelAccessor world, double x, double y, double z) {
-        double wiltTimer = rose.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getDouble("wilt_timer") + 1;
-        CustomData.update(DataComponents.CUSTOM_DATA, rose, tag -> tag.putDouble("wilt_timer", wiltTimer));
+		if (!mainIsRose && !offIsRose)
+			return false;
 
-        if (wiltTimer > ROSE_WILT_TICKS) {
-            if (world instanceof Level level) {
-                level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1, 1);
-            }
-            rose.shrink(1);
-            CustomData.update(DataComponents.CUSTOM_DATA, rose, tag -> tag.putDouble("wilt_timer", 0));
-        }
-    }
+		setSpeed(logSplinter, 0);
+		if (logSplinter instanceof Mob mob) {
+			mob.getNavigation().stop();
+		}
 
-    private static boolean checkNearbyRoseBlocks(LevelAccessor world, LogSplinterEntity logSplinter) {
-        for (int sx = -ROSE_SCAN_XZ; sx < ROSE_SCAN_XZ; sx++) {
-            for (int sy = -ROSE_SCAN_Y; sy < ROSE_SCAN_Y; sy++) {
-                for (int sz = -ROSE_SCAN_XZ; sz < ROSE_SCAN_XZ; sz++) {
-                    BlockPos check = BlockPos.containing(logSplinter.getX() + sx, logSplinter.getY() + sy, logSplinter.getZ() + sz);
-                    if (world.getBlockState(check).getBlock() == TheBackwoodsModBlocks.ASH_ROSE.get()) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
+		if (mainIsRose)
+			tickRoseItem(main, world, x, y, z);
+		if (offIsRose)
+			tickRoseItem(off, world, x, y, z);
 
-    private static Entity findEntityInWorldRange(LevelAccessor world, Class<? extends Entity> clazz, double x, double y, double z, double range) {
-        return world.getEntitiesOfClass(clazz, AABB.ofSize(new Vec3(x, y, z), range, range, range), e -> true)
-                .stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(x, y, z))).findFirst().orElse(null);
-    }
+		return true;
+	}
+
+	private static void tickRoseItem(ItemStack rose, LevelAccessor world, double x, double y, double z) {
+		double wiltTimer = rose.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getDouble("wilt_timer") + 1;
+		CustomData.update(DataComponents.CUSTOM_DATA, rose, tag -> tag.putDouble("wilt_timer", wiltTimer));
+
+		if (wiltTimer > ROSE_WILT_TICKS) {
+			if (world instanceof Level level) {
+				level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1f, 1f);
+			}
+			rose.shrink(1);
+			CustomData.update(DataComponents.CUSTOM_DATA, rose, tag -> tag.putDouble("wilt_timer", 0));
+		}
+	}
+
+	private static boolean checkNearbyRoseBlocks(LevelAccessor world, LogSplinterEntity logSplinter) {
+		for (int sx = -ROSE_SCAN_XZ; sx < ROSE_SCAN_XZ; sx++) {
+			for (int sy = -ROSE_SCAN_Y; sy < ROSE_SCAN_Y; sy++) {
+				for (int sz = -ROSE_SCAN_XZ; sz < ROSE_SCAN_XZ; sz++) {
+					BlockPos check = BlockPos.containing(logSplinter.getX() + sx, logSplinter.getY() + sy, logSplinter.getZ() + sz);
+					if (world.getBlockState(check).getBlock() == TheBackwoodsModBlocks.ASH_ROSE.get()) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	private static Entity findEntityInWorldRange(LevelAccessor world, Class<? extends Entity> clazz, double x, double y, double z, double range) {
+		return world.getEntitiesOfClass(clazz, AABB.ofSize(new Vec3(x, y, z), range, range, range), e -> true)
+				.stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(x, y, z))).findFirst().orElse(null);
+	}
 }

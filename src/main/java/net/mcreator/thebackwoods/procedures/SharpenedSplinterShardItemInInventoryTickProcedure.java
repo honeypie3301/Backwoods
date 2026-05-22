@@ -15,10 +15,8 @@ public class SharpenedSplinterShardItemInInventoryTickProcedure {
 			return;
 		if (world.getLevelData().getGameTime() % 160 == 0) {
 			if (entity instanceof Player) {
-				if (!(entity instanceof Player _plr ? _plr.getAbilities().instabuild : false)) {
-					if (hasEntityInInventory(entity, new ItemStack(TheBackwoodsModItems.SHARPENED_SPLINTER_SHARD.get()))) {
-						entity.hurt(new DamageSource(world.holderOrThrow(DamageTypes.SWEET_BERRY_BUSH)), (float) 0.08);
-					}
+				if (hasEntityInInventory(entity, new ItemStack(TheBackwoodsModItems.SHARPENED_SPLINTER_SHARD.get()))) {
+					entity.hurt(new DamageSource(world.holderOrThrow(DamageTypes.SWEET_BERRY_BUSH)), (float) 0.08);
 				}
 			}
 		}

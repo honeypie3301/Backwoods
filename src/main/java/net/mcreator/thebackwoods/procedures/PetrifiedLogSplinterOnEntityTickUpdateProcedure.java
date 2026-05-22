@@ -6,7 +6,7 @@ import net.mcreator.thebackwoods.init.TheBackwoodsModBlocks;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.bus.api.Event;
-
+// 1.21.1 neoforge
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.HitResult;
@@ -42,17 +42,21 @@ import java.util.Comparator;
 public class PetrifiedLogSplinterOnEntityTickUpdateProcedure {
 
     private static final double WATCH_DOT_THRESHOLD = 0.5;
-    private static final double ACTIVE_MOVE_SPEED = 0.3; 
+    private static final double ACTIVE_MOVE_SPEED = 0.3;
     private static final float MINE_SPEED_MULTIPLIER = 12f;
-    private static final float MINE_SPEED_BASE = 15f; 
+    private static final float MINE_SPEED_BASE = 15f;
     private static final float MAX_BREAKABLE_HARDNESS = 60f;
     private static final double TARGET_RANGE = 56;
-    private static final double MINE_RAY_DISTANCE = 2.0; 
+    private static final double MINE_RAY_DISTANCE = 2.0;
     private static final double ROSE_WILT_TICKS = 400;
     private static final int ROSE_SCAN_XZ = 6;
     private static final int ROSE_SCAN_Y = 3;
     private static final int RAGE_WATCH_THRESHOLD = 600;
+    private static final int RAGE_THRESHOLD_HIT_BONUS = 150;
     private static final double RAGE_ESCAPE_RANGE = 18.0;
+
+    private static final String K_RAGE_BONUS = "rage_watch_bonus";
+    private static final String K_LAST_HURT_TIME = "rage_last_hurt_time";
 
     public static void execute() {
     }
@@ -72,7 +76,7 @@ public class PetrifiedLogSplinterOnEntityTickUpdateProcedure {
         if (!(entity instanceof PetrifiedLogSplinterEntity petrified))
             return;
 
-        if (petrified.isPassenger() && (petrified.getVehicle() instanceof net.minecraft.world.entity.vehicle.Boat || 
+        if (petrified.isPassenger() && (petrified.getVehicle() instanceof net.minecraft.world.entity.vehicle.Boat ||
             petrified.getVehicle() instanceof net.minecraft.world.entity.vehicle.ChestBoat)) {
             petrified.stopRiding();
             petrified.setDeltaMovement(petrified.getDeltaMovement().add(0, 0.2, 0));
@@ -81,11 +85,24 @@ public class PetrifiedLogSplinterOnEntityTickUpdateProcedure {
         Player foundPlayer = (Player) findEntityInWorldRange(world, Player.class, x, y, z, TARGET_RANGE);
         if (foundPlayer == null) {
             resetState(petrified);
+            petrified.getPersistentData().putInt(K_RAGE_BONUS, 0);
             return;
         }
 
         int isEnraged = petrified.getEntityData().get(PetrifiedLogSplinterEntity.DATA_isEnraged);
         int watchTimer = petrified.getEntityData().get(PetrifiedLogSplinterEntity.DATA_watchTimer);
+
+        // NEW: decrease threshold by +280 bonus each time hit by player
+        if (petrified.getLastHurtByMob() instanceof Player) {
+            int lastSeenHurtTime = petrified.getPersistentData().getInt(K_LAST_HURT_TIME);
+            int currentHurtTime = petrified.hurtTime;
+            if (currentHurtTime > 0 && currentHurtTime != lastSeenHurtTime) {
+                int bonus = petrified.getPersistentData().getInt(K_RAGE_BONUS) + RAGE_THRESHOLD_HIT_BONUS;
+                petrified.getPersistentData().putInt(K_RAGE_BONUS, bonus);
+                petrified.getPersistentData().putInt(K_LAST_HURT_TIME, currentHurtTime);
+            }
+        }
+        int effectiveRageThreshold = Math.max(1, RAGE_WATCH_THRESHOLD - petrified.getPersistentData().getInt(K_RAGE_BONUS));
 
         Vec3 toSplinter = petrified.getEyePosition().subtract(foundPlayer.getEyePosition()).normalize();
         boolean isWatched = foundPlayer.getLookAngle().normalize().dot(toSplinter) > WATCH_DOT_THRESHOLD && foundPlayer.hasLineOfSight(petrified);
@@ -98,7 +115,7 @@ public class PetrifiedLogSplinterOnEntityTickUpdateProcedure {
         if (isWatched && isEnraged == 0) {
             watchTimer++;
             petrified.getEntityData().set(PetrifiedLogSplinterEntity.DATA_watchTimer, watchTimer);
-            if (watchTimer >= RAGE_WATCH_THRESHOLD) {
+            if (watchTimer >= effectiveRageThreshold) {
                 petrified.getEntityData().set(PetrifiedLogSplinterEntity.DATA_isEnraged, 1);
                 petrified.getEntityData().set(PetrifiedLogSplinterEntity.DATA_watchTimer, 0);
                 isEnraged = 1;
@@ -131,17 +148,16 @@ public class PetrifiedLogSplinterOnEntityTickUpdateProcedure {
                 int mineProgress = petrified.getEntityData().get(PetrifiedLogSplinterEntity.DATA_mineProgress) + 1;
                 petrified.getEntityData().set(PetrifiedLogSplinterEntity.DATA_mineProgress, mineProgress);
 
-                // --- ADDED: Swing animation every 6 ticks ---
                 if (petrified.tickCount % 6 == 0) {
                     petrified.swing(InteractionHand.MAIN_HAND);
                 }
 
                 float speedRef = canMineFeet ? world.getBlockState(feetPos).getDestroySpeed(world, feetPos) : world.getBlockState(facePos).getDestroySpeed(world, facePos);
-                
+
                 if (mineProgress > (speedRef * MINE_SPEED_MULTIPLIER + MINE_SPEED_BASE)) {
                     if (canMineFeet) world.destroyBlock(feetPos, false);
                     if (canMineFace) world.destroyBlock(facePos, false);
-                    
+
                     if (petrified instanceof Mob mob) mob.getNavigation().stop();
                     petrified.getEntityData().set(PetrifiedLogSplinterEntity.DATA_mineProgress, 0);
                 }
@@ -153,9 +169,11 @@ public class PetrifiedLogSplinterOnEntityTickUpdateProcedure {
             handleVerticalPathing(world, petrified, foundPlayer);
         }
 
-        if (checkHeldRose(foundPlayer, petrified, world, foundPlayer.getX(), foundPlayer.getY(), foundPlayer.getZ()) || (petrified.tickCount % 5 == 0 && checkNearbyRoseBlocks(world, petrified))) {
+        if (checkHeldRose(foundPlayer, petrified, world, foundPlayer.getX(), foundPlayer.getY(), foundPlayer.getZ())
+                || (petrified.tickCount % 5 == 0 && checkNearbyRoseBlocks(world, petrified))) {
             setSpeed(petrified, 0);
             resetState(petrified);
+            petrified.getPersistentData().putInt(K_RAGE_BONUS, 0);
         }
     }
 

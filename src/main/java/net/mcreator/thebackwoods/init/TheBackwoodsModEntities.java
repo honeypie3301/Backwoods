@@ -45,6 +45,14 @@ public class TheBackwoodsModEntities {
 					.ridingOffset(-0.6f).sized(0.6f, 1.8f));
 	public static final DeferredHolder<EntityType<?>, EntityType<PetrifiedLogSplinterEntity>> PETRIFIED_LOG_SPLINTER = register("petrified_log_splinter",
 			EntityType.Builder.<PetrifiedLogSplinterEntity>of(PetrifiedLogSplinterEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune().ridingOffset(-0.6f).sized(0.6f, 1.8f));
+	public static final DeferredHolder<EntityType<?>, EntityType<StiltWalkerEntity>> STILT_WALKER = register("stilt_walker",
+			EntityType.Builder.<StiltWalkerEntity>of(StiltWalkerEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3)
+
+					.sized(0.5f, 3.4f));
+	public static final DeferredHolder<EntityType<?>, EntityType<LignumGigasEntity>> LIGNUM_GIGAS = register("lignum_gigas",
+			EntityType.Builder.<LignumGigasEntity>of(LignumGigasEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3)
+
+					.sized(1.2f, 5.8f));
 
 	// Start of user code block custom entities
 	// End of user code block custom entities
@@ -61,6 +69,8 @@ public class TheBackwoodsModEntities {
 		RotEntity.init(event);
 		BlindspotSplinterEntity.init(event);
 		PetrifiedLogSplinterEntity.init(event);
+		StiltWalkerEntity.init(event);
+		LignumGigasEntity.init(event);
 	}
 
 	@SubscribeEvent
@@ -72,5 +82,7 @@ public class TheBackwoodsModEntities {
 		event.put(ROT.get(), RotEntity.createAttributes().build());
 		event.put(BLINDSPOT_SPLINTER.get(), BlindspotSplinterEntity.createAttributes().build());
 		event.put(PETRIFIED_LOG_SPLINTER.get(), PetrifiedLogSplinterEntity.createAttributes().build());
+		event.put(STILT_WALKER.get(), StiltWalkerEntity.createAttributes().build());
+		event.put(LIGNUM_GIGAS.get(), LignumGigasEntity.createAttributes().build());
 	}
 }

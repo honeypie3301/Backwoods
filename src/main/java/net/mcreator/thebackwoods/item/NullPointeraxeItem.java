@@ -19,7 +19,7 @@ public class NullPointeraxeItem extends AxeItem {
 	private static final Tier TOOL_TIER = new Tier() {
 		@Override
 		public int getUses() {
-			return 2077;
+			return 2079;
 		}
 
 		@Override
@@ -50,7 +50,7 @@ public class NullPointeraxeItem extends AxeItem {
 	};
 
 	public NullPointeraxeItem() {
-		super(TOOL_TIER, new Item.Properties().attributes(DiggerItem.createAttributes(TOOL_TIER, 2076f, 2.7f)).fireResistant());
+		super(TOOL_TIER, new Item.Properties().attributes(DiggerItem.createAttributes(TOOL_TIER, 2012f, 2.7f)).fireResistant());
 	}
 
 	@Override

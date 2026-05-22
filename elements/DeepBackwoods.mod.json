@@ -52,15 +52,15 @@
       "max": 0.3
     },
     "genContinentalness": {
-      "min": 0.3,
-      "max": 1.0
+      "min": 0.4,
+      "max": 0.8
     },
     "genErosion": {
-      "min": -0.7,
-      "max": 1.0
+      "min": 0.0,
+      "max": 0.3
     },
     "genWeirdness": {
-      "min": 0.75,
+      "min": 0.6,
       "max": 1.0
     },
     "treesPerChunk": 0,
@@ -79,9 +79,7 @@
     "treeFruits": {
       "value": ""
     },
-    "defaultFeatures": [
-      "Caves"
-    ],
+    "defaultFeatures": [],
     "spawnStronghold": false,
     "spawnMineshaft": false,
     "spawnMineshaftMesa": false,

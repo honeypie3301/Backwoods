@@ -1,10 +1,14 @@
 {
   "type": "neoforge:add_spawns",
-  "biomes": "the_backwoods:splinter_nest",
+  "biomes": [
+    "the_backwoods:uniform_grain",
+    "the_backwoods:labyrinthine_grids",
+    "the_backwoods:pillar_thicket"
+  ],
   "spawners": {
     "type": "the_backwoods:blindspot_splinter",
     "weight": 1,
     "minCount": 1,
-    "maxCount": 17
+    "maxCount": 1
   }
 }

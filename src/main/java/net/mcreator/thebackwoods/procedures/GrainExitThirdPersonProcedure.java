@@ -29,21 +29,11 @@ import java.util.UUID;
 @EventBusSubscriber
 public class GrainExitThirdPersonProcedure {
 
-    // Tick milestones
-    // 0-59:   wait 3 seconds (60 ticks)
-    // 60:     play wood_creak_7 at volume 1.0
-    // 61-80:  wait 1 second (20 ticks)
-    // 80:     play wood_creak_7 at volume 3
-    // 81-100: wait 1 second (20 ticks)
-    // 100:    play wood_creak_7 at volume 5
-    // 101-130: wait 1.5 seconds (30 ticks)
-    // 130:    teleport
-
-    private static final int SOUND_1_TICK = 60;
-    private static final int SOUND_2_TICK = 100;
-    private static final int SOUND_3_TICK = 140;
-    private static final int TELEPORT_TICK = 100;
-    private static final int TELEPORT_DELAY_TICKS = 78;
+    private static final int SOUND_1_TICK = 150;
+    private static final int SOUND_2_TICK = 250;
+    private static final int SOUND_3_TICK = 350;
+    private static final int TELEPORT_TICK = 250;
+    private static final int TELEPORT_DELAY_TICKS = 195;
 
     private static final ResourceKey<Level> THE_GRAIN = ResourceKey.create(
             Registries.DIMENSION, ResourceLocation.parse("the_backwoods:the_grain"));

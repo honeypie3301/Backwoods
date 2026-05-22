@@ -14,7 +14,7 @@
     "fluidBlock": {
       "value": "Blocks.WATER"
     },
-    "seaLevel": 15,
+    "seaLevel": 40,
     "generateOreVeins": false,
     "generateAquifers": false,
     "horizontalNoiseSize": 1,

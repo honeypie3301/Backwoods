@@ -469,5 +469,68 @@
         "stream": false
       }
     ]
+  },
+  "familiar_mood1": {
+    "subtitle": "subtitles.familiar_mood1",
+    "sounds": [
+      {
+        "name": "the_backwoods:01._title",
+        "stream": true
+      }
+    ]
+  },
+  "familiar_mood2": {
+    "subtitle": "subtitles.familiar_mood2",
+    "sounds": [
+      {
+        "name": "the_backwoods:12._trees...",
+        "stream": true
+      }
+    ]
+  },
+  "familiar_mood3": {
+    "subtitle": "subtitles.familiar_mood3",
+    "sounds": [
+      {
+        "name": "the_backwoods:88._lost_library",
+        "stream": true
+      }
+    ]
+  },
+  "familiar_mood4": {
+    "subtitle": "subtitles.familiar_mood4",
+    "sounds": [
+      {
+        "name": "the_backwoods:92._dear_little_brother...",
+        "stream": true
+      }
+    ]
+  },
+  "familiar_mood5": {
+    "subtitle": "subtitles.familiar_mood5",
+    "sounds": [
+      {
+        "name": "the_backwoods:135._calm",
+        "stream": true
+      }
+    ]
+  },
+  "familiar_mood6": {
+    "subtitle": "subtitles.familiar_mood6",
+    "sounds": [
+      {
+        "name": "the_backwoods:165._a_home_for_flowers_sunflower",
+        "stream": true
+      }
+    ]
+  },
+  "familiar_mood7": {
+    "subtitle": "subtitles.familiar_mood7",
+    "sounds": [
+      {
+        "name": "the_backwoods:174._wake_up",
+        "stream": true
+      }
+    ]
   }
 }

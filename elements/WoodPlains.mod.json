@@ -80,8 +80,7 @@
       "value": ""
     },
     "defaultFeatures": [
-      "FrozenTopLayer",
-      "Caves"
+      "FrozenTopLayer"
     ],
     "spawnStronghold": false,
     "spawnMineshaft": true,
