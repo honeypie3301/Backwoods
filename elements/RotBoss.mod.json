@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "achievement",
   "definition": {
     "achievementName": "Sentinel",
@@ -14,7 +14,7 @@
     "hideIfNotCompleted": false,
     "rewardLoot": [],
     "rewardRecipes": [],
-    "rewardXP": 30,
+    "rewardXP": 1000,
     "achievementType": "challenge",
     "parent": {
       "value": "CUSTOM:EnterBackwoods"

@@ -10,6 +10,8 @@ import net.minecraft.client.model.HumanoidModel;
 import net.mcreator.thebackwoods.entity.PetrifiedLogSplinterEntity;
 
 public class PetrifiedLogSplinterRenderer extends HumanoidMobRenderer<PetrifiedLogSplinterEntity, HumanoidModel<PetrifiedLogSplinterEntity>> {
+	private final ResourceLocation entityTexture = ResourceLocation.parse("the_backwoods:textures/entities/petrified_oak_log_biped.png");
+
 	public PetrifiedLogSplinterRenderer(EntityRendererProvider.Context context) {
 		super(context, new HumanoidModel<PetrifiedLogSplinterEntity>(context.bakeLayer(ModelLayers.PLAYER)), 0.5f);
 		this.addLayer(new HumanoidArmorLayer(this, new HumanoidModel(context.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR)), new HumanoidModel(context.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR)), context.getModelManager()));
@@ -17,6 +19,6 @@ public class PetrifiedLogSplinterRenderer extends HumanoidMobRenderer<PetrifiedL
 
 	@Override
 	public ResourceLocation getTextureLocation(PetrifiedLogSplinterEntity entity) {
-		return ResourceLocation.parse("the_backwoods:textures/entities/petrified_oak_log_biped.png");
+		return entityTexture;
 	}
 }

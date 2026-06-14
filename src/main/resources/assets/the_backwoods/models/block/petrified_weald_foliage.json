@@ -3,6 +3,5 @@
   "textures": {
     "all": "the_backwoods:block/petrified_azalea_leaves",
     "particle": "the_backwoods:block/petrified_azalea_leaves"
-  },
-  "render_type": "cutout"
+  }
 }

@@ -19,27 +19,19 @@ import net.minecraft.core.BlockPos;
 import net.mcreator.thebackwoods.procedures.GeodeTeleporterEntityCollidesInTheBlockProcedure;
 
 public class GeodeTeleporterBlock extends Block {
+	private static final VoxelShape SHAPE = Shapes.empty();
+
 	public GeodeTeleporterBlock() {
-		super(BlockBehaviour.Properties.of().mapColor(MapColor.NONE).sound(SoundType.EMPTY).instabreak().noCollission().noOcclusion().isRedstoneConductor((bs, br, bp) -> false).replaceable().instrument(NoteBlockInstrument.HAT));
-	}
-
-	@Override
-	public boolean propagatesSkylightDown(BlockState state, BlockGetter reader, BlockPos pos) {
-		return true;
-	}
-
-	@Override
-	public int getLightBlock(BlockState state, BlockGetter worldIn, BlockPos pos) {
-		return 0;
-	}
-
-	@Override
-	public VoxelShape getVisualShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
-		return Shapes.empty();
+		super(BlockBehaviour.Properties.of().mapColor(MapColor.NONE).sound(SoundType.EMPTY).instabreak().noCollission().isRedstoneConductor((bs, br, bp) -> false).replaceable().instrument(NoteBlockInstrument.HAT));
 	}
 
 	@Override
 	public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
+		return SHAPE;
+	}
+
+	@Override
+	public VoxelShape getVisualShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
 		return Shapes.empty();
 	}
 

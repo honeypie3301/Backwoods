@@ -19,9 +19,7 @@
       "trigger": "minecraft:consume_item",
       "conditions": {
         "item": {
-          "items": [
-            "the_backwoods:pale_draught_bottle"
-          ]
+          "items": "the_backwoods:pale_draught_bottle"
         }
       }
     }

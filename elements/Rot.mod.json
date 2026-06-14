@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "livingentity",
   "definition": {
     "mobName": "Rot",
@@ -19,12 +19,12 @@
       "fixedValue": 1.25
     },
     "boundingBoxScale": {
-      "fixedValue": 1.2
+      "fixedValue": 1.25
     },
     "modelLayers": [
       {
         "model": "Default",
-        "texture": "oak_biped.png",
+        "texture": "rot_layer1.png",
         "disableHurtOverlay": false,
         "glow": false,
         "condition": {
@@ -87,8 +87,8 @@
       }
     ],
     "animations": [],
-    "modelWidth": 0.7000000000000001,
-    "modelHeight": 2.0,
+    "modelWidth": 0.6,
+    "modelHeight": 1.8,
     "modelShadowSize": 0.7,
     "mountedYOffset": 0.0,
     "hasSpawnEgg": true,
@@ -153,15 +153,15 @@
     "ridable": false,
     "canControlForward": false,
     "canControlStrafe": false,
-    "immuneToFire": true,
-    "immuneToArrows": true,
+    "immuneToFire": false,
+    "immuneToArrows": false,
     "immuneToFallDamage": true,
     "immuneToCactus": false,
     "immuneToDrowning": false,
     "immuneToLightning": false,
     "immuneToPotions": false,
     "immuneToPlayer": false,
-    "immuneToExplosion": true,
+    "immuneToExplosion": false,
     "immuneToTrident": false,
     "immuneToAnvil": false,
     "immuneToWither": false,
@@ -216,23 +216,25 @@
       {
         "min": -2147483648,
         "max": 2147483647,
-        "name": "animationTimer",
+        "name": "sentinel_solar_charge_ticks",
         "type": "integer",
         "value": 0
       },
       {
         "min": -2147483648,
         "max": 2147483647,
-        "name": "sonicCooldown",
+        "name": "sentinel_cryo_charge_ticks",
         "type": "integer",
         "value": 0
+      },
+      {
+        "name": "is_laser_firing",
+        "type": "logic",
+        "value": false
       }
     ],
     "whenMobDies": {
       "name": "RotEntityDies"
-    },
-    "whenMobIsHurt": {
-      "name": "RotEntityIsHurt"
     },
     "onMobTickUpdate": {
       "name": "RotOnEntityTickUpdate"
@@ -242,7 +244,7 @@
     },
     "hasAI": true,
     "aiBase": "(none)",
-    "aixml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"aitasks_container\" deletable=\"false\" x=\"40\" y=\"40\"><next><block type=\"attack_with_range\"><field name=\"range\">5</field><field name=\"speed\">1.2</field><field name=\"longmemory\">FALSE</field><field name=\"condition\">null,null</field><next><block type=\"attack_entity\"><field name=\"insight\">TRUE</field><field name=\"nearby\">FALSE</field><field name=\"entity\">EntityMob</field><field name=\"condition\">null,null</field><next><block type=\"wander\"><field name=\"speed\">0.6</field><field name=\"condition\">null,null</field><next><block type=\"attack_action\"><field name=\"callhelp\">FALSE</field><field name=\"condition\">null,null</field><next><block type=\"attack_entity\"><field name=\"insight\">TRUE</field><field name=\"nearby\">FALSE</field><field name=\"entity\">EntityPlayer</field><field name=\"condition\">null,null</field><next><block type=\"watch_closest_entity\"><field name=\"entity\">EntityPlayer</field><field name=\"radius\">32</field><field name=\"condition\">null,null</field><next><block type=\"doors_break\"><field name=\"condition\">null,null</field></block></next></block></next></block></next></block></next></block></next></block></next></block></next></block></xml>",
+    "aixml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"aitasks_container\" deletable=\"false\" x=\"40\" y=\"40\"><next><block type=\"attack_with_range\"><field name=\"range\">2</field><field name=\"speed\">1.2</field><field name=\"longmemory\">FALSE</field><field name=\"condition\">null,null</field><next><block type=\"doors_break\"><field name=\"condition\">null,null</field><next><block type=\"wander\"><field name=\"speed\">0.6</field><field name=\"condition\">null,null</field><next><block type=\"attack_action\"><field name=\"callhelp\">FALSE</field><field name=\"condition\">null,null</field><next><block type=\"watch_closest_entity\"><field name=\"entity\">EntityPlayer</field><field name=\"radius\">32</field><field name=\"condition\">null,null</field></block></next></block></next></block></next></block></next></block></next></block></xml>",
     "breedable": false,
     "tameable": false,
     "breedTriggerItems": [],

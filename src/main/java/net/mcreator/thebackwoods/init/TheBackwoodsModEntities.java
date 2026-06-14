@@ -37,10 +37,11 @@ public class TheBackwoodsModEntities {
 			EntityType.Builder.<AshWeaverEntity>of(AshWeaverEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3)
 
 					.ridingOffset(-0.6f).sized(0.6f, 1.8f));
-	public static final DeferredHolder<EntityType<?>, EntityType<RotEntity>> ROT = register("rot",
-			EntityType.Builder.<RotEntity>of(RotEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune().ridingOffset(-0.6f).sized(0.7f, 2f));
+	public static final DeferredHolder<EntityType<?>, EntityType<RotEntity>> ROT = register("rot", EntityType.Builder.<RotEntity>of(RotEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3)
+
+			.ridingOffset(-0.6f).sized(0.6f, 1.8f));
 	public static final DeferredHolder<EntityType<?>, EntityType<BlindspotSplinterEntity>> BLINDSPOT_SPLINTER = register("blindspot_splinter",
-			EntityType.Builder.<BlindspotSplinterEntity>of(BlindspotSplinterEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3)
+			EntityType.Builder.<BlindspotSplinterEntity>of(BlindspotSplinterEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(32).setUpdateInterval(3)
 
 					.ridingOffset(-0.6f).sized(0.6f, 1.8f));
 	public static final DeferredHolder<EntityType<?>, EntityType<PetrifiedLogSplinterEntity>> PETRIFIED_LOG_SPLINTER = register("petrified_log_splinter",
@@ -48,11 +49,27 @@ public class TheBackwoodsModEntities {
 	public static final DeferredHolder<EntityType<?>, EntityType<StiltWalkerEntity>> STILT_WALKER = register("stilt_walker",
 			EntityType.Builder.<StiltWalkerEntity>of(StiltWalkerEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3)
 
-					.sized(0.5f, 3.4f));
+					.sized(0.6f, 3.4f));
 	public static final DeferredHolder<EntityType<?>, EntityType<LignumGigasEntity>> LIGNUM_GIGAS = register("lignum_gigas",
 			EntityType.Builder.<LignumGigasEntity>of(LignumGigasEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3)
 
-					.sized(1.2f, 5.8f));
+					.sized(0.6f, 2.8f));
+	public static final DeferredHolder<EntityType<?>, EntityType<LignumVermisEntity>> LIGNUM_VERMIS = register("lignum_vermis",
+			EntityType.Builder.<LignumVermisEntity>of(LignumVermisEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(48).setUpdateInterval(3)
+
+					.sized(0.4f, 0.3f));
+	public static final DeferredHolder<EntityType<?>, EntityType<FractusEntity>> FRACTUS = register("fractus",
+			EntityType.Builder.<FractusEntity>of(FractusEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3)
+
+					.sized(1f, 1f));
+	public static final DeferredHolder<EntityType<?>, EntityType<FractusPrimeEntity>> FRACTUS_PRIME = register("fractus_prime",
+			EntityType.Builder.<FractusPrimeEntity>of(FractusPrimeEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune()
+
+					.sized(1f, 1f));
+	public static final DeferredHolder<EntityType<?>, EntityType<LignumPalusEntity>> LIGNUM_PALUS = register("lignum_palus",
+			EntityType.Builder.<LignumPalusEntity>of(LignumPalusEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(48).setUpdateInterval(3)
+
+					.sized(0.4f, 5.8f));
 
 	// Start of user code block custom entities
 	// End of user code block custom entities
@@ -71,6 +88,10 @@ public class TheBackwoodsModEntities {
 		PetrifiedLogSplinterEntity.init(event);
 		StiltWalkerEntity.init(event);
 		LignumGigasEntity.init(event);
+		LignumVermisEntity.init(event);
+		FractusEntity.init(event);
+		FractusPrimeEntity.init(event);
+		LignumPalusEntity.init(event);
 	}
 
 	@SubscribeEvent
@@ -84,5 +105,9 @@ public class TheBackwoodsModEntities {
 		event.put(PETRIFIED_LOG_SPLINTER.get(), PetrifiedLogSplinterEntity.createAttributes().build());
 		event.put(STILT_WALKER.get(), StiltWalkerEntity.createAttributes().build());
 		event.put(LIGNUM_GIGAS.get(), LignumGigasEntity.createAttributes().build());
+		event.put(LIGNUM_VERMIS.get(), LignumVermisEntity.createAttributes().build());
+		event.put(FRACTUS.get(), FractusEntity.createAttributes().build());
+		event.put(FRACTUS_PRIME.get(), FractusPrimeEntity.createAttributes().build());
+		event.put(LIGNUM_PALUS.get(), LignumPalusEntity.createAttributes().build());
 	}
 }

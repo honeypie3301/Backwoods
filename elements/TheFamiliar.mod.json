@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "dimension",
   "definition": {
     "biomesInDimension": [
@@ -28,6 +28,7 @@
         "value": "CUSTOM:MirroredTaiga"
       }
     ],
+    "biomesInDimensionCaves": [],
     "worldGenType": "Normal world gen",
     "mainFillerBlock": {
       "value": "Blocks.STONE#0"

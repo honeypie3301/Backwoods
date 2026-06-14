@@ -59,6 +59,8 @@ public class TheBackwoodsModBlocks {
 	public static final DeferredBlock<Block> COBBLED_NULLSTONE_WALL;
 	public static final DeferredBlock<Block> SCANDERE_LIGNUM;
 	public static final DeferredBlock<Block> SCANDERE_LIGNUM_LOG;
+	public static final DeferredBlock<Block> FALSE_OAK_PLANKS;
+	public static final DeferredBlock<Block> FRACTUS_CORE;
 	static {
 		BACKWOODS_PORTAL = REGISTRY.register("backwoods_portal", BackwoodsPortalBlock::new);
 		ASH_ROSE = REGISTRY.register("ash_rose", AshRoseBlock::new);
@@ -106,6 +108,8 @@ public class TheBackwoodsModBlocks {
 		COBBLED_NULLSTONE_WALL = REGISTRY.register("cobbled_nullstone_wall", CobbledNullstoneWallBlock::new);
 		SCANDERE_LIGNUM = REGISTRY.register("scandere_lignum", ScandereLignumBlock::new);
 		SCANDERE_LIGNUM_LOG = REGISTRY.register("scandere_lignum_log", ScandereLignumLogBlock::new);
+		FALSE_OAK_PLANKS = REGISTRY.register("false_oak_planks", FalseOakPlanksBlock::new);
+		FRACTUS_CORE = REGISTRY.register("fractus_core", FractusCoreBlock::new);
 	}
 	// Start of user code block custom blocks
 	// End of user code block custom blocks

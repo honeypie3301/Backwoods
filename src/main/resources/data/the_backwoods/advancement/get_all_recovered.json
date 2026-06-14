@@ -20,9 +20,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "the_backwoods:recovered_faded_sword"
-            ],
+            "items": "the_backwoods:recovered_faded_sword",
             "count": {
               "min": 1,
               "max": 1
@@ -36,9 +34,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "the_backwoods:recovered_faded_axe"
-            ],
+            "items": "the_backwoods:recovered_faded_axe",
             "count": {
               "min": 1,
               "max": 1
@@ -52,9 +48,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "the_backwoods:recovered_faded_pickaxe"
-            ],
+            "items": "the_backwoods:recovered_faded_pickaxe",
             "count": {
               "min": 1,
               "max": 1
@@ -68,9 +62,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "the_backwoods:recovered_faded_hoe"
-            ],
+            "items": "the_backwoods:recovered_faded_hoe",
             "count": {
               "min": 1,
               "max": 1
@@ -84,9 +76,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "the_backwoods:recovered_faded_shovel"
-            ],
+            "items": "the_backwoods:recovered_faded_shovel",
             "count": {
               "min": 1,
               "max": 1

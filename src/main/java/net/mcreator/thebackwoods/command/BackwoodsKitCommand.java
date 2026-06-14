@@ -31,7 +31,7 @@ public class BackwoodsKitCommand {
 			if (entity != null)
 				direction = entity.getDirection();
 
-			GiveTestKitProcedure.execute(entity);
+			GiveTestKitProcedure.execute(world, x, y, z, entity);
 			return 0;
 		}));
 	}

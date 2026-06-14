@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "biome",
   "definition": {
     "name": "Uniform Grain",
@@ -63,6 +63,10 @@
       "min": -1.0,
       "max": -0.3
     },
+    "genDepth": {
+      "min": 0.2,
+      "max": 0.9
+    },
     "treesPerChunk": 0,
     "vanillaTreeType": "Birch trees",
     "treeType": 0,
@@ -81,8 +85,8 @@
     },
     "defaultFeatures": [],
     "spawnStronghold": false,
-    "spawnMineshaft": true,
-    "spawnMineshaftMesa": true,
+    "spawnMineshaft": false,
+    "spawnMineshaftMesa": false,
     "spawnPillagerOutpost": false,
     "villageType": "none",
     "spawnWoodlandMansion": false,

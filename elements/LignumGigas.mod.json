@@ -1,11 +1,11 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "livingentity",
   "definition": {
     "mobName": "Lignum Gigas",
     "mobLabel": "",
-    "mobModelName": "ModelLignumGigas",
-    "mobModelTexture": "lignumgigas.png",
+    "mobModelName": "ModelLignumGigas_1",
+    "mobModelTexture": "gigas_skin.png",
     "transparentModelCondition": {
       "fixedValue": false
     },
@@ -19,13 +19,13 @@
       "fixedValue": 40.0
     },
     "boundingBoxScale": {
-      "fixedValue": 14.0
+      "fixedValue": 28.5
     },
     "modelLayers": [],
     "animations": [
       {
         "animation": {
-          "value": "CUSTOM:LignumGigasAnimation.low_health_attack"
+          "value": "CUSTOM:LignumGigas_2Animation.low_health_attack"
         },
         "speed": 1.0,
         "condition": {
@@ -36,7 +36,7 @@
       },
       {
         "animation": {
-          "value": "CUSTOM:LignumGigas_1Animation.reverse_low_health_attack"
+          "value": "CUSTOM:LignumGigas_2Animation.reverse_low_health_attack"
         },
         "speed": 1.0,
         "condition": {
@@ -46,8 +46,8 @@
         "amplitude": 1.0
       }
     ],
-    "modelWidth": 1.2,
-    "modelHeight": 5.8,
+    "modelWidth": 0.6,
+    "modelHeight": 2.8,
     "modelShadowSize": 1.0,
     "mountedYOffset": 0.0,
     "hasSpawnEgg": true,
@@ -132,10 +132,10 @@
       "value": ""
     },
     "hurtSound": {
-      "value": "entity.generic.hurt"
+      "value": "CUSTOM:gigas_hurt"
     },
     "deathSound": {
-      "value": "entity.generic.death"
+      "value": "CUSTOM:gigas_death"
     },
     "stepSound": {
       "value": ""

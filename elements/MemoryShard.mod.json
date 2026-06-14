@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "item",
   "definition": {
     "renderType": 0,
@@ -11,7 +11,11 @@
     "animations": [],
     "name": "Memory Shard",
     "rarity": "COMMON",
-    "creativeTabs": [],
+    "creativeTabs": [
+      {
+        "value": "MATERIALS"
+      }
+    ],
     "stackSize": 64,
     "enchantability": 0,
     "useDuration": 0,
@@ -23,14 +27,19 @@
     "destroyAnyBlock": false,
     "immuneToFire": false,
     "isPiglinCurrency": false,
+    "repairItems": [],
     "stayInGridWhenCrafting": false,
     "damageOnCrafting": false,
     "enableMeleeDamage": false,
     "damageVsEntity": 0.0,
+    "attackSpeed": 1.6,
     "specialInformation": {
       "fixedValue": []
     },
     "glowCondition": {
+      "fixedValue": false
+    },
+    "openGUIOnRightClick": {
       "fixedValue": false
     },
     "inventorySize": 9,
@@ -58,6 +67,7 @@
     "musicDiscDescription": "",
     "musicDiscLengthInTicks": 100,
     "musicDiscAnalogOutput": 0,
-    "providedBannerPatterns": []
+    "providedBannerPatterns": [],
+    "attributeModifiers": []
   }
 }

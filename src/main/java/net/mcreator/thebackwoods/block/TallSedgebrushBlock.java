@@ -20,6 +20,8 @@ import net.minecraft.core.BlockPos;
 import net.mcreator.thebackwoods.init.TheBackwoodsModBlocks;
 
 public class TallSedgebrushBlock extends DoublePlantBlock {
+	private static final VoxelShape SHAPE = box(0, 0, 0, 14, 32, 14);
+
 	public TallSedgebrushBlock() {
 		super(BlockBehaviour.Properties.of().mapColor(MapColor.DIRT).sound(SoundType.GRASS).strength(0.3f, 0f).speedFactor(0.95f).jumpFactor(0.88f).noCollission().offsetType(BlockBehaviour.OffsetType.XZ).pushReaction(PushReaction.DESTROY));
 	}
@@ -27,7 +29,7 @@ public class TallSedgebrushBlock extends DoublePlantBlock {
 	@Override
 	public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
 		Vec3 offset = state.getOffset(world, pos);
-		return box(0, 0, 0, 14, 32, 14).move(offset.x, offset.y, offset.z);
+		return SHAPE.move(offset.x, offset.y, offset.z);
 	}
 
 	@Override

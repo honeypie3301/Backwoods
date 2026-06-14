@@ -56,11 +56,10 @@ public class RotEntityIsHurtProcedure {
 		double particleAmount = 0;
 		double masterRadius = 0;
 		if (entity instanceof RotEntity) {
-			attacker = (entity instanceof LivingEntity _entity) ? _entity.getLastHurtByMob() : null;
 			foundPlayer = findEntityInWorldRange(world, Player.class, x, y, z, 64);
+			attacker = findEntityInWorldRange(world, Player.class, x, y, z, 64);
 			if (attacker != null) {
-				if (hasEntityInInventory(attacker, new ItemStack(Items.TOTEM_OF_UNDYING)) || (attacker instanceof LivingEntity _livEnt ? _livEnt.getMainHandItem() : ItemStack.EMPTY).getItem() == Items.TOTEM_OF_UNDYING
-						|| (attacker instanceof LivingEntity _livEnt ? _livEnt.getOffhandItem() : ItemStack.EMPTY).getItem() == Items.TOTEM_OF_UNDYING) {
+				if (hasEntityInInventory(attacker, new ItemStack(Items.TOTEM_OF_UNDYING))) {
 					if (Math.random() < 0.004) {
 						if (attacker instanceof Player _player && !_player.level().isClientSide())
 							_player.displayClientMessage(Component.literal("I see the false life you clutch."), true);
@@ -82,7 +81,7 @@ public class RotEntityIsHurtProcedure {
 								for (Entity entityiterator : world.getEntitiesOfClass(Entity.class, new AABB(_center, _center).inflate(16 / 2d), e -> true).stream().sorted(Comparator.comparingDouble(_entcnd -> _entcnd.distanceToSqr(_center)))
 										.toList()) {
 									if (!(entityiterator instanceof RotEntity)) {
-										entityiterator.hurt(new DamageSource(world.holderOrThrow(DamageTypes.SONIC_BOOM)), 15);
+										entityiterator.hurt(new DamageSource(world.holderOrThrow(DamageTypes.SONIC_BOOM)), 10);
 										entityiterator.setDeltaMovement(new Vec3((((entityiterator.getX() - entity.getX()) / (entityiterator.position()).distanceTo((entity.position()))) * 2), 0.6,
 												(((entityiterator.getZ() - entity.getZ()) / (entityiterator.position()).distanceTo((entity.position()))) * 2)));
 									}
@@ -132,21 +131,21 @@ public class RotEntityIsHurtProcedure {
 				}
 			}
 			if ((entity instanceof LivingEntity _livEnt ? _livEnt.getHealth() : -1) <= 250 && entity.getPersistentData().getDouble("msg1_fired") == 0) {
-				if (!(foundPlayer == null)) {
+				if (foundPlayer != null) {
 					entity.getPersistentData().putDouble("msg1_fired", 1);
 					if (foundPlayer instanceof Player _player && !_player.level().isClientSide())
 						_player.displayClientMessage(Component.literal("I have felt deeper cuts than this."), true);
 				}
 			}
 			if ((entity instanceof LivingEntity _livEnt ? _livEnt.getHealth() : -1) <= 100 && entity.getPersistentData().getDouble("msg2_fired") == 0) {
-				if (!(foundPlayer == null)) {
+				if (foundPlayer != null) {
 					entity.getPersistentData().putDouble("msg2_fired", 1);
 					if (foundPlayer instanceof Player _player && !_player.level().isClientSide())
 						_player.displayClientMessage(Component.literal("I thin yet the hunger widens."), true);
 				}
 			}
 			if ((entity instanceof LivingEntity _livEnt ? _livEnt.getHealth() : -1) <= 50 && entity.getPersistentData().getDouble("msg3_fired") == 0) {
-				if (!(foundPlayer == null)) {
+				if (foundPlayer != null) {
 					entity.getPersistentData().putDouble("msg3_fired", 1);
 					if (foundPlayer instanceof Player _player && !_player.level().isClientSide())
 						_player.displayClientMessage(Component.literal("Pruning..."), true);

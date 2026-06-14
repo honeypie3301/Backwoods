@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "dimension",
   "definition": {
     "biomesInDimension": [
@@ -7,6 +7,7 @@
         "value": "CUSTOM:RottingDeep"
       }
     ],
+    "biomesInDimensionCaves": [],
     "worldGenType": "Normal world gen",
     "mainFillerBlock": {
       "value": "CUSTOM:RottenOakWood"

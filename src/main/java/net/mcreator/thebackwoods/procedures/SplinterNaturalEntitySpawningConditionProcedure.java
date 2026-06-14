@@ -16,7 +16,7 @@ public class SplinterNaturalEntitySpawningConditionProcedure {
 		Entity targetPlayer = null;
 		double radius = 0;
 		radius = 128;
-		targetPlayer = findEntityInWorldRange(world, Player.class, x, y, z, 128);
+		targetPlayer = findEntityInWorldRange(world, Player.class, x, y, z, 64);
 		if (targetPlayer != null) {
 			if (targetPlayer.getPersistentData().getDouble("backwoods_time") > 20000) {
 				radius = 32;

@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "item",
   "definition": {
     "renderType": 0,
@@ -27,16 +27,21 @@
     "destroyAnyBlock": false,
     "immuneToFire": false,
     "isPiglinCurrency": false,
+    "repairItems": [],
     "stayInGridWhenCrafting": false,
     "damageOnCrafting": false,
     "enableMeleeDamage": true,
     "damageVsEntity": 0.8,
+    "attackSpeed": 1.6,
     "specialInformation": {
       "fixedValue": [
         "§8It's a little sharp."
       ]
     },
     "glowCondition": {
+      "fixedValue": false
+    },
+    "openGUIOnRightClick": {
       "fixedValue": false
     },
     "inventorySize": 9,
@@ -67,6 +72,7 @@
     "musicDiscDescription": "",
     "musicDiscLengthInTicks": 100,
     "musicDiscAnalogOutput": 0,
-    "providedBannerPatterns": []
+    "providedBannerPatterns": [],
+    "attributeModifiers": []
   }
 }

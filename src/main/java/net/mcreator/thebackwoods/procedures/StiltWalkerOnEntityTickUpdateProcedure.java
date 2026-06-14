@@ -1,5 +1,5 @@
 package net.mcreator.thebackwoods.procedures;
-
+// 1.21.1 neo
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
@@ -12,6 +12,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
@@ -55,6 +56,11 @@ public class StiltWalkerOnEntityTickUpdateProcedure {
 	private static final int TELEPORT_ATTEMPTS = 20;
 	private static final int REQUIRED_AIR_BLOCKS = 4;
 
+	// Projectile dodge
+	private static final double PROJECTILE_DODGE_RANGE = 8.0;
+	private static final double PROJECTILE_DODGE_DOT_THRESHOLD = 0.6;
+	private static final int PROJECTILE_DODGE_COOLDOWN = 10;
+
 	// Mining
 	private static final double MINE_RAY_DISTANCE = 2.0;
 	private static final float MINE_SPEED_MULTIPLIER = 50f;
@@ -62,7 +68,7 @@ public class StiltWalkerOnEntityTickUpdateProcedure {
 	private static final float MAX_BREAKABLE_HARDNESS = 50f;
 
 	// Summoned splinter cleanup
-	private static final int SUMMONED_IDLE_TIMEOUT = 200;
+	private static final int SUMMONED_IDLE_TIMEOUT = 140;
 	private static final double SUMMONED_IDLE_PLAYER_RANGE = 14.0;
 
 	public static void execute() {
@@ -86,6 +92,8 @@ public class StiltWalkerOnEntityTickUpdateProcedure {
 	public static void execute(LevelAccessor world, double x, double y, double z, Entity entity) {
 		if (!(entity instanceof StiltWalkerEntity stilt)) return;
 
+		if (tryDodgeProjectile(world, stilt)) return;
+
 		Player target = findNearestPlayer(world, x, y, z, TARGET_RANGE);
 		if (target == null || target.isCreative() || target.isSpectator()) {
 			stilt.getPersistentData().putInt("sw_watch_timer", 0);
@@ -101,7 +109,8 @@ public class StiltWalkerOnEntityTickUpdateProcedure {
 		boolean enraged = stilt.getPersistentData().getBoolean("sw_enraged");
 		int watchTimer = stilt.getPersistentData().getInt("sw_watch_timer");
 
-		Vec3 toStilt = stilt.getBoundingBox().getCenter().subtract(target.getEyePosition()).normalize();
+		Vec3 toStilt = stilt.getBoundingBox().getCenter().subtract(target.getEyePosition());
+		if (toStilt.lengthSqr() > 1.0e-8) toStilt = toStilt.normalize();
 		double dot = target.getLookAngle().normalize().dot(toStilt);
 		boolean watched = dot > WATCH_DOT_THRESHOLD && target.hasLineOfSight(stilt);
 
@@ -177,6 +186,37 @@ public class StiltWalkerOnEntityTickUpdateProcedure {
 			stilt.getPersistentData().putInt("sw_watch_timer", 0);
 			stilt.getPersistentData().putBoolean("sw_enraged", false);
 		}
+	}
+
+	private static boolean tryDodgeProjectile(LevelAccessor world, StiltWalkerEntity stilt) {
+		int dodgeCooldown = stilt.getPersistentData().getInt("sw_projectile_dodge_cooldown");
+		if (dodgeCooldown > 0) {
+			stilt.getPersistentData().putInt("sw_projectile_dodge_cooldown", dodgeCooldown - 1);
+			return false;
+		}
+
+		AABB dodgeBox = stilt.getBoundingBox().inflate(PROJECTILE_DODGE_RANGE);
+		List<Projectile> projectiles = world.getEntitiesOfClass(Projectile.class, dodgeBox, Projectile::isAlive);
+
+		Vec3 stiltCenter = stilt.getBoundingBox().getCenter();
+		for (Projectile projectile : projectiles) {
+			if (projectile.getOwner() == stilt) continue;
+
+			Vec3 motion = projectile.getDeltaMovement();
+			if (motion.lengthSqr() < 1.0e-6) continue;
+
+			Vec3 projectileToStilt = stiltCenter.subtract(projectile.position());
+			if (projectileToStilt.lengthSqr() < 1.0e-6) continue;
+
+			double approachDot = motion.normalize().dot(projectileToStilt.normalize());
+			if (approachDot < PROJECTILE_DODGE_DOT_THRESHOLD) continue;
+
+			teleportAway(world, stilt);
+			stilt.getPersistentData().putInt("sw_projectile_dodge_cooldown", PROJECTILE_DODGE_COOLDOWN);
+			return true;
+		}
+
+		return false;
 	}
 
 	private static void tryMineFrontBlock(LevelAccessor world, StiltWalkerEntity stilt, Player target) {

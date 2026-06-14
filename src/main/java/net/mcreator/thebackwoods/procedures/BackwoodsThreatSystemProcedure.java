@@ -143,11 +143,11 @@ public class BackwoodsThreatSystemProcedure {
                 // Find any Rot in range of the player's death and clear them
                 s.getEntitiesOfClass(RotEntity.class, player.getBoundingBox().inflate(ROT_NEARBY_RADIUS)).forEach(rot -> {
                     s.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, rot.getX(), rot.getY() + 1.0, rot.getZ(), 90, 0.45, 0.9, 0.45, 0.02);
-                    SoundEvent roar = BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:rot_roar"));
-                    if (roar != null) {
-                        s.playSound(null, BlockPos.containing(rot.getX(), rot.getY(), rot.getZ()), roar, SoundSource.HOSTILE, 1.2f, 0.8f);
-                    }
-                    rot.discard();
+                    TheBackwoodsMod.queueServerWork(60, () -> {
+                        if (rot.isAlive()) {
+                            rot.discard();
+                        }
+                    });
                 });
             }
             return;
@@ -295,12 +295,13 @@ public class BackwoodsThreatSystemProcedure {
         long lastSpawn = getLong(player, K_LAST_SPAWN, 0L);
         if (gameTime - lastSpawn < SPAWN_COOLDOWN_TICKS) return;
 
-        if (isRotNearby(level, player.getX(), player.getY(), player.getZ(), ROT_NEARBY_RADIUS)) return;
+        if (isRotActiveForPlayer(level, player)) return;
         if (level.random.nextFloat() > 0.22f) return;
 
         putLong(player, K_LAST_SPAWN, gameTime);
 
         TheBackwoodsMod.queueServerWork(SPAWN_DELAY_TICKS, () -> {
+            if (isRotActiveForPlayer(level, player)) return;
             int sx = Mth.floor(player.getX() + Mth.nextDouble(RandomSource.create(), -10, 10));
             int sz = Mth.floor(player.getZ() + Mth.nextDouble(RandomSource.create(), -10, 10));
             int sy = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, sx, sz);
@@ -310,16 +311,33 @@ public class BackwoodsThreatSystemProcedure {
                     BlockPos.containing(sx, sy, sz),
                     MobSpawnType.MOB_SUMMONED
             );
-            if (spawned != null) {
-                spawned.setDeltaMovement(0, 0, 0);
+            if (spawned instanceof RotEntity rot) {
+                rot.setDeltaMovement(0, 0, 0);
+                player.getPersistentData().putString("bw_active_rot_uuid", rot.getUUID().toString());
             }
         });
     }
 
+    private static boolean isRotActiveForPlayer(ServerLevel level, Player player) {
+        if (player.getPersistentData().contains("bw_active_rot_uuid")) {
+            try {
+                java.util.UUID rotUuid = java.util.UUID.fromString(player.getPersistentData().getString("bw_active_rot_uuid"));
+                Entity activeRot = level.getEntity(rotUuid);
+                if (activeRot instanceof RotEntity && activeRot.isAlive()) {
+                    return true;
+                }
+            } catch (Exception e) {
+                // Ignore parsing or retrieval errors
+            }
+        }
+        return false;
+    }
+
     private static boolean isRotNearby(LevelAccessor world, double x, double y, double z, double radius) {
+        double searchRadius = 160.0; // Optimized tracking/simulation distance to prevent chunk search lookup lag
         return !world.getEntitiesOfClass(
                 RotEntity.class,
-                new AABB(Vec3.ZERO, Vec3.ZERO).move(new Vec3(x, y, z)).inflate(radius / 2d),
+                new AABB(Vec3.ZERO, Vec3.ZERO).move(new Vec3(x, y, z)).inflate(searchRadius),
                 e -> true
         ).isEmpty();
     }
@@ -339,4 +357,4 @@ public class BackwoodsThreatSystemProcedure {
     private static void putLong(Player p, String key, long value) {
         p.getPersistentData().putLong(key, value);
     }
-}
+} // 1.21.1

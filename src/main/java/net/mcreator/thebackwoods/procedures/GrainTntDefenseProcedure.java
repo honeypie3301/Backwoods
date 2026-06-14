@@ -6,6 +6,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 
 import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.item.PrimedTnt;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -25,8 +26,8 @@ import java.util.Set;
 public class GrainTntDefenseProcedure {
 
     private static final int CHECK_INTERVAL_TICKS = 8;
-    private static final int TNT_SCAN_RADIUS_XZ = 28;
-    private static final int TNT_SCAN_RADIUS_Y = 12;
+    private static final int TNT_SCAN_RADIUS_XZ = 64;
+    private static final int TNT_SCAN_RADIUS_Y = 24;
     private static final int BIG_TNT_THRESHOLD = 1; 
     private static final int PURGE_COOLDOWN_TICKS = 20 * 2; // 6 sec
 
@@ -42,8 +43,14 @@ public class GrainTntDefenseProcedure {
             ResourceLocation.parse("the_backwoods:backwoods")
     );
 
-    // Set containing both dimensions for the check
-    private static final Set<ResourceKey<Level>> VALID_DIMENSIONS = Set.of(THE_GRAIN, BACKWOODS);
+    // 1. Declare the resource key for the sub strata dimension
+    private static final ResourceKey<Level> THE_SUB_STRATA = ResourceKey.create(
+            Registries.DIMENSION,
+            ResourceLocation.parse("the_backwoods:the_sub_strata")
+    );
+
+    // 2. Add it to the immutable Set of allowed dimensions
+    private static final Set<ResourceKey<Level>> VALID_DIMENSIONS = Set.of(THE_GRAIN, BACKWOODS, THE_SUB_STRATA);
 
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
@@ -90,6 +97,18 @@ public class GrainTntDefenseProcedure {
         player.getPersistentData().putInt(NBT_COOLDOWN_KEY, PURGE_COOLDOWN_TICKS);
     }
 
+    private static boolean isExplosiveEntity(Entity entity) {
+        if (!entity.isAlive()) return false;
+        if (entity instanceof PrimedTnt) return true;
+        
+        ResourceLocation registryName = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        if (registryName != null) {
+            String idStr = registryName.toString();
+            return idStr.equals("alexscaves:nuclear_bomb");
+        }
+        return false;
+    }
+
     private static int countPrimedTntInRadius(Level level, BlockPos center) {
         AABB box = AABB.ofSize(
                 new Vec3(center.getX() + 0.5, center.getY() + 0.5, center.getZ() + 0.5),
@@ -97,7 +116,7 @@ public class GrainTntDefenseProcedure {
                 TNT_SCAN_RADIUS_Y * 2.0,
                 TNT_SCAN_RADIUS_XZ * 2.0
         );
-        return level.getEntitiesOfClass(PrimedTnt.class, box, t -> t.isAlive()).size();
+        return level.getEntitiesOfClass(Entity.class, box, GrainTntDefenseProcedure::isExplosiveEntity).size();
     }
 
     private static void purgePrimedTntInRadius(Level level, BlockPos center) {
@@ -108,9 +127,18 @@ public class GrainTntDefenseProcedure {
                 TNT_SCAN_RADIUS_XZ * 2.0
         );
 
-        List<PrimedTnt> tnts = level.getEntitiesOfClass(PrimedTnt.class, box, t -> t.isAlive());
-        for (PrimedTnt tnt : tnts) {
-            tnt.discard();
+        List<Entity> tnts = level.getEntitiesOfClass(Entity.class, box, GrainTntDefenseProcedure::isExplosiveEntity);
+        for (Entity tnt : tnts) {
+            ResourceLocation registryName = BuiltInRegistries.ENTITY_TYPE.getKey(tnt.getType());
+            if (registryName != null && registryName.toString().equals("alexscaves:nuclear_bomb")) {
+                // Teleport nuclear bombs straight up to Y=400 and reset their downward velocity vector
+                tnt.teleportTo(tnt.getX(), 600.0, tnt.getZ());
+                tnt.setDeltaMovement(new Vec3(0, -0.2, 0));
+                tnt.hurtMarked = true;
+            } else {
+                // Standard TNT still gets completely discarded
+                tnt.discard();
+            }
         }
     }
 }

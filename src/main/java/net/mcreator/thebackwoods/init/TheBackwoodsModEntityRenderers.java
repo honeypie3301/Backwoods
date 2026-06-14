@@ -23,5 +23,9 @@ public class TheBackwoodsModEntityRenderers {
 		event.registerEntityRenderer(TheBackwoodsModEntities.PETRIFIED_LOG_SPLINTER.get(), PetrifiedLogSplinterRenderer::new);
 		event.registerEntityRenderer(TheBackwoodsModEntities.STILT_WALKER.get(), StiltWalkerRenderer::new);
 		event.registerEntityRenderer(TheBackwoodsModEntities.LIGNUM_GIGAS.get(), LignumGigasRenderer::new);
+		event.registerEntityRenderer(TheBackwoodsModEntities.LIGNUM_VERMIS.get(), LignumVermisRenderer::new);
+		event.registerEntityRenderer(TheBackwoodsModEntities.FRACTUS.get(), FractusRenderer::new);
+		event.registerEntityRenderer(TheBackwoodsModEntities.FRACTUS_PRIME.get(), FractusPrimeRenderer::new);
+		event.registerEntityRenderer(TheBackwoodsModEntities.LIGNUM_PALUS.get(), LignumPalusRenderer::new);
 	}
 }

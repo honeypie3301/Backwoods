@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "biome",
   "definition": {
     "name": "Labyrinthine Grids",
@@ -62,6 +62,10 @@
     "genWeirdness": {
       "min": 0.4,
       "max": 0.6
+    },
+    "genDepth": {
+      "min": 0.2,
+      "max": 0.9
     },
     "treesPerChunk": 0,
     "vanillaTreeType": "Birch trees",

@@ -8,10 +8,10 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.bus.api.Event;
 // 1.21.1 neoforge
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
@@ -26,18 +26,13 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.util.Mth;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.Component;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.CommandSource;
 
 import javax.annotation.Nullable;
-import java.util.Comparator;
+import java.util.List;
 
 @EventBusSubscriber
 public class LogSplinterOnEntityTickUpdateProcedure {
@@ -50,7 +45,6 @@ public class LogSplinterOnEntityTickUpdateProcedure {
 	private static final float DEGRADED_MINE_SPEED_MULTIPLIER = 80f;
 	private static final float DEGRADED_MINE_SPEED_BASE = 80f;
 	private static final float MAX_BREAKABLE_HARDNESS = 50f;
-	private static final double LOG_SPLINTER_SCAN_RADIUS = 28;
 	private static final double TARGET_RANGE = 56;
 	private static final double MINE_RAY_DISTANCE = 3.0;
 	private static final double ROSE_WILT_TICKS = 750;
@@ -60,13 +54,52 @@ public class LogSplinterOnEntityTickUpdateProcedure {
 	private static final int RAGE_THRESHOLD_HIT_BONUS = 150;
 	private static final double RAGE_ESCAPE_RANGE = 18.0;
 
+	private static final int PATH_RECALC_INTERVAL_TICKS = 8;
+	private static final double TARGET_MOVE_REPATH_DIST_SQR = 1.25;
+
 	private static final String K_RAGE_BONUS = "rage_watch_bonus";
 	private static final String K_LAST_HURT_TIME = "rage_last_hurt_time";
 
-	// age thresholds from display condition procedures
-	private static final int AGE_THIRD_TO_LAST = 360000;  // stage 6 - slow mining + speed
-	private static final int AGE_SECOND_TO_LAST = 420000; // stage 7 - stop bridging
-	private static final int AGE_LAST = 480000;           // stage 8 - die
+	private static final String K_HM_PHASE = "hm_phase";
+	private static final String K_HM_PHASE_TIMER = "hm_phase_timer";
+	private static final String K_HM_SILENT_CD = "hm_silent_cd";
+	private static final String K_FORCED_HUNT_TICKS = "forced_hunt_ticks";
+
+	private static final String K_NAV_LAST_TICK = "nav_last_tick";
+	private static final String K_NAV_TX = "nav_tx";
+	private static final String K_NAV_TY = "nav_ty";
+	private static final String K_NAV_TZ = "nav_tz";
+	private static final String K_NAV_MODE = "nav_mode";
+
+	private static final String K_STALK_WATCH_TICKS = "stalk_watch_ticks";
+	private static final int STALK_WATCH_MIN = 20;
+	private static final int STALK_WATCH_MAX = 50;
+	private static final int STALK_WATCH_CHANCE = 160;
+
+	// Personality
+	private static final String K_PERSONALITY_INIT = "ai_personality_init";
+	private static final String K_PERSONALITY = "ai_personality"; // 0=stalk/hunt, 1=angel
+	private static final int PERSONALITY_STALK_HUNT = 0;
+	private static final int PERSONALITY_ANGEL = 1;
+	private static final int ANGEL_CHANCE_PERCENT = 17;
+
+	private static final int PHASE_SILENT = 0;
+	private static final int PHASE_STALK = 1;
+	private static final int PHASE_HUNT = 2;
+
+	private static final int SILENT_MIN_TICKS = 80;
+	private static final int SILENT_MAX_TICKS = 220;
+	private static final int STALK_MIN_TICKS = 120;
+	private static final int STALK_MAX_TICKS = 300;
+	private static final int HUNT_TICKS = 400;
+	private static final int POST_HUNT_SILENT_CD = 240;
+
+	private static final double STALK_SPEED = 0.14;
+	private static final double STALK_FOLLOW_DIST = 18.0;
+
+	private static final int AGE_THIRD_TO_LAST = 360000;
+	private static final int AGE_SECOND_TO_LAST = 420000;
+	private static final int AGE_LAST = 480000;
 
 	@SubscribeEvent
 	public static void onEntityTick(EntityTickEvent.Pre event) {
@@ -78,183 +111,344 @@ public class LogSplinterOnEntityTickUpdateProcedure {
 	}
 
 	private static void execute(@Nullable Event event, LevelAccessor world, double x, double y, double z, Entity entity) {
-		if (entity == null || !(entity instanceof LogSplinterEntity))
-			return;
+		if (!(entity instanceof LogSplinterEntity logSplinter)) return;
 
-		if (entity.isPassenger()) {
-			Entity vehicle = entity.getVehicle();
+		if (!logSplinter.getPersistentData().getBoolean(K_PERSONALITY_INIT)) {
+			int p = (logSplinter.getRandom().nextInt(100) < ANGEL_CHANCE_PERCENT) ? PERSONALITY_ANGEL : PERSONALITY_STALK_HUNT;
+			logSplinter.getPersistentData().putInt(K_PERSONALITY, p);
+			logSplinter.getPersistentData().putBoolean(K_PERSONALITY_INIT, true);
+		}
+		int personality = logSplinter.getPersistentData().getInt(K_PERSONALITY);
+
+		if (logSplinter.isPassenger()) {
+			Entity vehicle = logSplinter.getVehicle();
 			if (vehicle instanceof net.minecraft.world.entity.vehicle.Boat || vehicle instanceof net.minecraft.world.entity.vehicle.ChestBoat) {
-				entity.stopRiding();
-				entity.setDeltaMovement(entity.getDeltaMovement().add(0, 0.2, 0));
+				logSplinter.stopRiding();
+				logSplinter.setDeltaMovement(logSplinter.getDeltaMovement().add(0, 0.2, 0));
 			}
 		}
 
-		final Vec3 center = new Vec3(x, y, z);
+		int age = logSplinter.getEntityData().get(LogSplinterEntity.DATA_Age);
+		if (age >= AGE_LAST) {
+			logSplinter.discard();
+			return;
+		}
 
-		for (LogSplinterEntity logSplinter : world.getEntitiesOfClass(LogSplinterEntity.class, new AABB(center, center).inflate(LOG_SPLINTER_SCAN_RADIUS), e -> true)
-				.stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(center))).toList()) {
+		boolean isDegraded = age >= AGE_THIRD_TO_LAST;
+		boolean isCritical = age >= AGE_SECOND_TO_LAST;
 
-			int age = logSplinter.getEntityData().get(LogSplinterEntity.DATA_Age);
+		Player foundPlayer = findNearestPlayerInRange(world, logSplinter.getX(), logSplinter.getY(), logSplinter.getZ(), TARGET_RANGE);
+		if (foundPlayer == null) {
+			int remainingForcedHunt = logSplinter.getPersistentData().getInt(K_FORCED_HUNT_TICKS);
 
-			// die at last stage
-			if (age >= AGE_LAST) {
-				logSplinter.kill();
-				continue;
-			}
-
-			boolean isDegraded = age >= AGE_THIRD_TO_LAST;
-			boolean isCritical = age >= AGE_SECOND_TO_LAST;
-
-			Player foundPlayer = (Player) findEntityInWorldRange(world, Player.class, logSplinter.getX(), logSplinter.getY(), logSplinter.getZ(), TARGET_RANGE);
-			if (foundPlayer == null) {
+			if (remainingForcedHunt <= 0) {
 				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
 				logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
 				logSplinter.getPersistentData().putInt(K_RAGE_BONUS, 0);
-				continue;
+				logSplinter.getPersistentData().putInt(K_HM_PHASE, PHASE_SILENT);
+				logSplinter.getPersistentData().putInt(K_HM_PHASE_TIMER, 0);
+				logSplinter.getPersistentData().putInt(K_FORCED_HUNT_TICKS, 0);
+				logSplinter.getPersistentData().putInt(K_STALK_WATCH_TICKS, 0);
+				stopNav(logSplinter);
+			} else {
+				logSplinter.getPersistentData().putInt(K_FORCED_HUNT_TICKS, remainingForcedHunt - 1);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 1);
+				logSplinter.getPersistentData().putInt(K_HM_PHASE, PHASE_HUNT);
+				logSplinter.getPersistentData().putInt(K_HM_PHASE_TIMER, HUNT_TICKS);
 			}
+			return;
+		}
 
-			int frozenByRose = logSplinter.getEntityData().get(LogSplinterEntity.DATA_frozenByRose);
-			int isEnraged = logSplinter.getEntityData().get(LogSplinterEntity.DATA_isEnraged);
-			int watchTimer = logSplinter.getEntityData().get(LogSplinterEntity.DATA_watchTimer);
+		int frozenByRose = logSplinter.getEntityData().get(LogSplinterEntity.DATA_frozenByRose);
+		int isEnraged = logSplinter.getEntityData().get(LogSplinterEntity.DATA_isEnraged);
+		int watchTimer = logSplinter.getEntityData().get(LogSplinterEntity.DATA_watchTimer);
 
-			// NEW: decrease threshold by +280 bonus each time hit by player
-			if (logSplinter.getLastHurtByMob() instanceof Player) {
-				int lastSeenHurtTime = logSplinter.getPersistentData().getInt(K_LAST_HURT_TIME);
-				int currentHurtTime = logSplinter.hurtTime;
-				if (currentHurtTime > 0 && currentHurtTime != lastSeenHurtTime) {
-					int bonus = logSplinter.getPersistentData().getInt(K_RAGE_BONUS) + RAGE_THRESHOLD_HIT_BONUS;
-					logSplinter.getPersistentData().putInt(K_RAGE_BONUS, bonus);
-					logSplinter.getPersistentData().putInt(K_LAST_HURT_TIME, currentHurtTime);
-				}
+		int forcedHuntTicks = logSplinter.getPersistentData().getInt(K_FORCED_HUNT_TICKS);
+		if (forcedHuntTicks > 0) {
+			logSplinter.getPersistentData().putInt(K_FORCED_HUNT_TICKS, forcedHuntTicks - 1);
+			logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 1);
+			isEnraged = 1;
+		}
+
+		if (logSplinter.getLastHurtByMob() instanceof Player) {
+			int lastSeenHurtTime = logSplinter.getPersistentData().getInt(K_LAST_HURT_TIME);
+			int currentHurtTime = logSplinter.hurtTime;
+			if (currentHurtTime > 0 && currentHurtTime != lastSeenHurtTime) {
+				int bonus = logSplinter.getPersistentData().getInt(K_RAGE_BONUS) + RAGE_THRESHOLD_HIT_BONUS;
+				logSplinter.getPersistentData().putInt(K_RAGE_BONUS, bonus);
+				logSplinter.getPersistentData().putInt(K_LAST_HURT_TIME, currentHurtTime);
 			}
-			int effectiveRageThreshold = Math.max(1, RAGE_WATCH_THRESHOLD - logSplinter.getPersistentData().getInt(K_RAGE_BONUS));
+		}
 
-			Vec3 toLogSplinter = logSplinter.getEyePosition().subtract(foundPlayer.getEyePosition()).normalize();
-			double dot = foundPlayer.getLookAngle().normalize().dot(toLogSplinter);
-			boolean facing = dot > WATCH_DOT_THRESHOLD;
-			boolean canSee = foundPlayer.hasLineOfSight(logSplinter);
-			boolean isWatched = facing && canSee;
+		int effectiveRageThreshold = Math.max(1, RAGE_WATCH_THRESHOLD - logSplinter.getPersistentData().getInt(K_RAGE_BONUS));
 
-			double distToPlayer = logSplinter.position().distanceTo(foundPlayer.position());
-			if (isEnraged == 1 && distToPlayer > RAGE_ESCAPE_RANGE) {
+		Vec3 toLogSplinter = logSplinter.getEyePosition().subtract(foundPlayer.getEyePosition());
+		if (toLogSplinter.lengthSqr() > 1.0e-8) toLogSplinter = toLogSplinter.normalize();
+		double dot = foundPlayer.getLookAngle().normalize().dot(toLogSplinter);
+		boolean isWatched = (dot > WATCH_DOT_THRESHOLD) && foundPlayer.hasLineOfSight(logSplinter);
+
+		double distToPlayer = logSplinter.position().distanceTo(foundPlayer.position());
+		if (isEnraged == 1 && distToPlayer > RAGE_ESCAPE_RANGE) {
+			if (logSplinter.getPersistentData().getInt(K_FORCED_HUNT_TICKS) <= 0) {
 				logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
 				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
 				isEnraged = 0;
 			}
+		}
+
+		if (isWatched && isEnraged == 0) {
+			watchTimer++;
+			logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, watchTimer);
+			if (watchTimer >= effectiveRageThreshold) {
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 1);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+				isEnraged = 1;
+			}
+		} else if (!isWatched && isEnraged == 0) {
+			logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+		}
+
+		boolean foundRose = checkHeldRose(foundPlayer, logSplinter, world, foundPlayer.getX(), foundPlayer.getY(), foundPlayer.getZ());
+		if (!foundRose && logSplinter.tickCount % 5 == 0) {
+			foundRose = checkNearbyRoseBlocks(world, logSplinter);
+		}
+		if (foundRose || frozenByRose == 1) {
+			setSpeed(logSplinter, 0);
+			logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
+			logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+			logSplinter.getPersistentData().putInt(K_RAGE_BONUS, 0);
+			logSplinter.getPersistentData().putInt(K_FORCED_HUNT_TICKS, 0);
+			logSplinter.getPersistentData().putInt(K_STALK_WATCH_TICKS, 0);
+			stopNav(logSplinter);
+			return;
+		}
+
+		double heightDiff = foundPlayer.getY() - logSplinter.getY();
+		double horizontalDist = logSplinter.position().distanceTo(foundPlayer.position());
+		boolean isTowering = !isCritical && (heightDiff >= 1.4 && horizontalDist < 12);
+
+		if (personality == PERSONALITY_ANGEL) {
+			if (logSplinter.tickCount % 3 == 0) {
+				logSplinter.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(foundPlayer.getX(), foundPlayer.getEyeY(), foundPlayer.getZ()));
+			}
 
 			if (isWatched && isEnraged == 0) {
-				watchTimer++;
-				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, watchTimer);
-				if (watchTimer >= effectiveRageThreshold) {
-					logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 1);
-					logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
-					isEnraged = 1;
-				}
-			} else if (!isWatched && isEnraged == 0) {
-				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
-			}
-
-			if ((isWatched && isEnraged == 0) || frozenByRose == 1) {
 				setSpeed(logSplinter, 0);
-				if (logSplinter instanceof Mob mob) {
-					mob.getNavigation().stop();
-				}
-				continue;
+				stopNav(logSplinter);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
+				return;
 			}
 
-			logSplinter.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(foundPlayer.getX(), foundPlayer.getEyeY(), foundPlayer.getZ()));
 			setSpeed(logSplinter, isDegraded ? DEGRADED_MOVE_SPEED : ACTIVE_MOVE_SPEED);
+			if (logSplinter instanceof Mob angelMob) {
+				navMoveToEntityThrottled(logSplinter, angelMob, foundPlayer, 1.0, 3);
+			}
+		} else {
+			int phase = logSplinter.getPersistentData().getInt(K_HM_PHASE);
+			int phaseTimer = logSplinter.getPersistentData().getInt(K_HM_PHASE_TIMER);
+			int silentCd = logSplinter.getPersistentData().getInt(K_HM_SILENT_CD);
 
-			Vec3 logEyes = logSplinter.getEyePosition(1f);
-			Vec3 logView = logSplinter.getViewVector(1f);
-			Vec3 blockCheckTarget = logEyes.add(logView.scale(MINE_RAY_DISTANCE));
+			if (phase == PHASE_SILENT && isEnraged == 0 && forcedHuntTicks <= 0) {
+				phase = PHASE_STALK;
+				phaseTimer = randomBetween(logSplinter, STALK_MIN_TICKS, STALK_MAX_TICKS);
+				logSplinter.getPersistentData().putInt(K_HM_PHASE, phase);
+				logSplinter.getPersistentData().putInt(K_HM_PHASE_TIMER, phaseTimer);
+				logSplinter.getPersistentData().putInt(K_STALK_WATCH_TICKS, 0);
+			}
 
-			HitResult hit = world.clip(new ClipContext(logEyes, blockCheckTarget, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, logSplinter));
+			if (silentCd > 0) {
+				silentCd--;
+				logSplinter.getPersistentData().putInt(K_HM_SILENT_CD, silentCd);
+			}
 
-			if (hit.getType() == HitResult.Type.BLOCK) {
-				BlockPos facePos = ((BlockHitResult) hit).getBlockPos();
-				BlockPos feetPos = new BlockPos(facePos.getX(), Mth.floor(logSplinter.getY()), facePos.getZ());
+			if (isEnraged == 1 || logSplinter.getPersistentData().getInt(K_FORCED_HUNT_TICKS) > 0) {
+				phase = PHASE_HUNT;
+				phaseTimer = HUNT_TICKS + 40;
+				logSplinter.getPersistentData().putInt(K_HM_PHASE, phase);
+				logSplinter.getPersistentData().putInt(K_HM_PHASE_TIMER, phaseTimer);
+				logSplinter.getPersistentData().putInt(K_STALK_WATCH_TICKS, 0);
+			} else {
+				phaseTimer--;
+				if (phaseTimer <= 0) {
+					if (phase == PHASE_HUNT) {
+						phase = PHASE_SILENT;
+						phaseTimer = randomBetween(logSplinter, SILENT_MIN_TICKS, SILENT_MAX_TICKS);
+						logSplinter.getPersistentData().putInt(K_HM_SILENT_CD, POST_HUNT_SILENT_CD);
+						logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
+						logSplinter.getPersistentData().putInt(K_STALK_WATCH_TICKS, 0);
+					} else if (phase == PHASE_SILENT) {
+						phase = PHASE_STALK;
+						phaseTimer = randomBetween(logSplinter, STALK_MIN_TICKS, STALK_MAX_TICKS);
+						logSplinter.getPersistentData().putInt(K_STALK_WATCH_TICKS, 0);
+					} else {
+						phase = PHASE_SILENT;
+						phaseTimer = randomBetween(logSplinter, SILENT_MIN_TICKS, SILENT_MAX_TICKS);
+						logSplinter.getPersistentData().putInt(K_STALK_WATCH_TICKS, 0);
+					}
+				}
+				logSplinter.getPersistentData().putInt(K_HM_PHASE, phase);
+				logSplinter.getPersistentData().putInt(K_HM_PHASE_TIMER, phaseTimer);
+			}
 
-				boolean canMineFeet = canMine(world, feetPos, foundPlayer);
-				boolean canMineFace = canMine(world, facePos, foundPlayer);
+			if (logSplinter.tickCount % 3 == 0) {
+				logSplinter.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(foundPlayer.getX(), foundPlayer.getEyeY(), foundPlayer.getZ()));
+			}
 
-				if (canMineFeet || canMineFace) {
-					int mineProgress = logSplinter.getEntityData().get(LogSplinterEntity.DATA_mineProgress) + 1;
-					logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, mineProgress);
+			if (phase == PHASE_SILENT) {
+				setSpeed(logSplinter, 0);
+				stopNav(logSplinter);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
+				return;
+			}
 
+			if (phase == PHASE_STALK) {
+				setSpeed(logSplinter, STALK_SPEED);
+
+				int watchTicks = logSplinter.getPersistentData().getInt(K_STALK_WATCH_TICKS);
+				if (watchTicks > 0) {
+					logSplinter.getPersistentData().putInt(K_STALK_WATCH_TICKS, watchTicks - 1);
+					stopNav(logSplinter);
+					logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
+					return;
+				}
+
+				if (logSplinter.getRandom().nextInt(STALK_WATCH_CHANCE) == 0) {
+					logSplinter.getPersistentData().putInt(K_STALK_WATCH_TICKS, randomBetween(logSplinter, STALK_WATCH_MIN, STALK_WATCH_MAX));
+					stopNav(logSplinter);
+					logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
+					return;
+				}
+
+				if (logSplinter instanceof Mob mob) {
+					if (distToPlayer > STALK_FOLLOW_DIST) {
+						navMoveToEntityThrottled(logSplinter, mob, foundPlayer, 0.8, 1);
+					} else {
+						if (!mob.getNavigation().isDone() && logSplinter.tickCount % 10 == 0) {
+							stopNav(logSplinter);
+						}
+					}
+				}
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
+				return;
+			}
+
+			setSpeed(logSplinter, isDegraded ? DEGRADED_MOVE_SPEED : ACTIVE_MOVE_SPEED);
+			if (logSplinter instanceof Mob huntMob) {
+				navMoveToEntityThrottled(logSplinter, huntMob, foundPlayer, 1.0, 3);
+			}
+		}
+
+		Vec3 logEyes = logSplinter.getEyePosition(1f);
+		Vec3 logView = logSplinter.getViewVector(1f);
+		Vec3 blockCheckTarget = logEyes.add(logView.scale(MINE_RAY_DISTANCE));
+
+		HitResult hit = world.clip(new ClipContext(logEyes, blockCheckTarget, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, logSplinter));
+
+		BlockPos facePos;
+		BlockPos feetPos;
+
+		if (hit.getType() == HitResult.Type.BLOCK) {
+			facePos = ((BlockHitResult) hit).getBlockPos();
+			feetPos = new BlockPos(facePos.getX(), Mth.floor(logSplinter.getY()), facePos.getZ());
+		} else {
+			Vec3 look = logSplinter.getLookAngle().normalize();
+			int fx = Mth.floor(logSplinter.getX() + look.x);
+			int fz = Mth.floor(logSplinter.getZ() + look.z);
+			feetPos = new BlockPos(fx, Mth.floor(logSplinter.getY()), fz);
+			facePos = new BlockPos(fx, Mth.floor(logSplinter.getEyeY()), fz);
+		}
+
+		boolean canMineFeet = canMine(world, feetPos, foundPlayer);
+		boolean canMineFace = canMine(world, facePos, foundPlayer);
+
+		if (canMineFeet || canMineFace) {
+			logSplinter.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+			int mineProgress = logSplinter.getEntityData().get(LogSplinterEntity.DATA_mineProgress) + 1;
+			logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, mineProgress);
+
+			if (logSplinter.tickCount % 6 == 0) {
+				logSplinter.swing(InteractionHand.MAIN_HAND);
+			}
+
+			BlockPos trackPos = canMineFeet ? feetPos : facePos;
+			logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineX, trackPos.getX());
+			logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineY, trackPos.getY());
+			logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineZ, trackPos.getZ());
+
+			float speedRef = canMineFeet
+					? world.getBlockState(feetPos).getDestroySpeed(world, feetPos)
+					: world.getBlockState(facePos).getDestroySpeed(world, facePos);
+
+			float mineThreshold = isDegraded
+					? speedRef * DEGRADED_MINE_SPEED_MULTIPLIER + DEGRADED_MINE_SPEED_BASE
+					: speedRef * MINE_SPEED_MULTIPLIER + MINE_SPEED_BASE;
+
+			if (mineProgress > mineThreshold) {
+				if (canMineFeet) world.destroyBlock(feetPos, false);
+				if (canMineFace) world.destroyBlock(facePos, false);
+				stopNav(logSplinter);
+				logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
+			}
+		} else {
+			logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
+
+			if (!isCritical) {
+				if (heightDiff >= 1.4 && horizontalDist < 12) {
+					logSplinter.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Blocks.OAK_WOOD));
 					if (logSplinter.tickCount % 6 == 0) {
 						logSplinter.swing(InteractionHand.MAIN_HAND);
 					}
 
-					BlockPos trackPos = canMineFeet ? feetPos : facePos;
-					logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineX, trackPos.getX());
-					logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineY, trackPos.getY());
-					logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineZ, trackPos.getZ());
+					BlockPos under = BlockPos.containing(logSplinter.getX(), logSplinter.getY() - 1, logSplinter.getZ());
+					BlockPos body = BlockPos.containing(logSplinter.getX(), logSplinter.getY(), logSplinter.getZ());
+					BlockPos bodyUp = body.above();
 
-					float speedRef = canMineFeet ? world.getBlockState(feetPos).getDestroySpeed(world, feetPos) : world.getBlockState(facePos).getDestroySpeed(world, facePos);
-					float mineThreshold = isDegraded
-						? speedRef * DEGRADED_MINE_SPEED_MULTIPLIER + DEGRADED_MINE_SPEED_BASE
-						: speedRef * MINE_SPEED_MULTIPLIER + MINE_SPEED_BASE;
-
-					if (mineProgress > mineThreshold) {
-						if (canMineFeet) {
-							world.destroyBlock(feetPos, false);
-						}
-						if (canMineFace) {
-							world.destroyBlock(facePos, false);
-						}
-						if (logSplinter instanceof Mob mob) {
-							mob.getNavigation().stop();
-						}
-						logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
+					if (world.getBlockState(under).isAir()) {
+						world.setBlock(under, Blocks.OAK_WOOD.defaultBlockState(), 3);
 					}
-				} else {
-					logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
-				}
-			} else {
-				logSplinter.getEntityData().set(LogSplinterEntity.DATA_mineProgress, 0);
+					if (world.getBlockState(body).is(Blocks.OAK_WOOD)) {
+						world.setBlock(body, Blocks.AIR.defaultBlockState(), 3);
+					}
+					if (world.getBlockState(bodyUp).is(Blocks.OAK_WOOD)) {
+						world.setBlock(bodyUp, Blocks.AIR.defaultBlockState(), 3);
+					}
 
-				double heightDiff = foundPlayer.getY() - logSplinter.getY();
-				double horizontalDist = logSplinter.position().distanceTo(foundPlayer.position());
+					world.destroyBlock(BlockPos.containing(logSplinter.getX(), logSplinter.getY() + 2, logSplinter.getZ()), false);
+					world.destroyBlock(BlockPos.containing(logSplinter.getX(), logSplinter.getY() + 3, logSplinter.getZ()), false);
 
-				if (!isCritical) {
-					if (heightDiff >= 1.4 && horizontalDist < 12) {
-						if (world instanceof ServerLevel serverLevel) {
-							CommandSourceStack src = new CommandSourceStack(CommandSource.NULL, new Vec3(logSplinter.getX(), logSplinter.getY(), logSplinter.getZ()), Vec2.ZERO, serverLevel, 4, "", Component.literal(""), serverLevel.getServer(), null).withSuppressedOutput();
-							serverLevel.getServer().getCommands().performPrefixedCommand(src, "fill ~ ~-1 ~ ~ ~-1 ~ minecraft:oak_planks replace minecraft:air");
-							serverLevel.getServer().getCommands().performPrefixedCommand(src, "fill ~ ~ ~ ~ ~1 ~ minecraft:air replace minecraft:oak_planks");
-						}
-						world.destroyBlock(BlockPos.containing(logSplinter.getX(), logSplinter.getY() + 2, logSplinter.getZ()), false);
-						world.destroyBlock(BlockPos.containing(logSplinter.getX(), logSplinter.getY() + 3, logSplinter.getZ()), false);
-						if (logSplinter.onGround()) {
-							logSplinter.setDeltaMovement(new Vec3(logSplinter.getDeltaMovement().x(), 0.4, logSplinter.getDeltaMovement().z()));
-						}
-						logSplinter.fallDistance = 0;
-					} else if (heightDiff > -0.5 && heightDiff < 2.5) {
-						Vec3 look = logSplinter.getLookAngle();
-						BlockPos bridgePos = BlockPos.containing(logSplinter.getX() + look.x, logSplinter.getY() - 1, logSplinter.getZ() + look.z);
+					if (logSplinter.onGround()) {
+						logSplinter.setDeltaMovement(new Vec3(logSplinter.getDeltaMovement().x(), 0.4, logSplinter.getDeltaMovement().z()));
+					}
+					logSplinter.fallDistance = 0;
+				} else if (heightDiff > -0.5 && heightDiff < 2.5) {
+					Vec3 look = logSplinter.getLookAngle();
+					BlockPos bridgePos = BlockPos.containing(logSplinter.getX() + look.x, logSplinter.getY() - 1, logSplinter.getZ() + look.z);
+					BlockPos farBridgePos = BlockPos.containing(logSplinter.getX() + look.x * 2.0, logSplinter.getY() - 1, logSplinter.getZ() + look.z * 2.0);
+					boolean isNearGap = !(world.getBlockFloorHeight(bridgePos) > 0) || !(world.getBlockFloorHeight(farBridgePos) > 0);
+
+					if (isNearGap) {
+						logSplinter.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Blocks.OAK_WOOD));
 						if (!(world.getBlockFloorHeight(bridgePos) > 0)) {
+							if (logSplinter.tickCount % 6 == 0) {
+								logSplinter.swing(InteractionHand.MAIN_HAND);
+							}
 							world.setBlock(bridgePos, Blocks.OAK_WOOD.defaultBlockState(), 3);
 						}
+					} else {
+						logSplinter.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 					}
+				} else {
+					logSplinter.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 				}
-			}
-
-			boolean foundRose = checkHeldRose(foundPlayer, logSplinter, world, foundPlayer.getX(), foundPlayer.getY(), foundPlayer.getZ());
-			if (!foundRose && logSplinter.tickCount % 5 == 0) {
-				foundRose = checkNearbyRoseBlocks(world, logSplinter);
-			}
-
-			if (foundRose) {
-				setSpeed(logSplinter, 0);
-				logSplinter.getEntityData().set(LogSplinterEntity.DATA_isEnraged, 0);
-				logSplinter.getEntityData().set(LogSplinterEntity.DATA_watchTimer, 0);
-				logSplinter.getPersistentData().putInt(K_RAGE_BONUS, 0);
-				if (logSplinter instanceof Mob mob) {
-					mob.getNavigation().stop();
-				}
+			} else {
+				logSplinter.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 			}
 		}
+	}
+
+	private static int randomBetween(LogSplinterEntity entity, int min, int max) {
+		if (max <= min) return min;
+		return min + entity.getRandom().nextInt(max - min + 1);
 	}
 
 	private static void setSpeed(LivingEntity entity, double speed) {
@@ -264,17 +458,16 @@ public class LogSplinterOnEntityTickUpdateProcedure {
 	}
 
 	private static boolean canMine(LevelAccessor world, BlockPos pos, Player player) {
-		float speed = world.getBlockState(pos).getDestroySpeed(world, pos);
-		if (speed < 0 || speed >= MAX_BREAKABLE_HARDNESS)
-			return false;
-		if (pos.getY() == (int) (player.getY() - 2))
-			return false;
-		return !world.getBlockState(pos).isAir();
+		BlockState state = world.getBlockState(pos);
+		if (state.isAir()) return false;
+		float speed = state.getDestroySpeed(world, pos);
+		if (speed < 0 || speed >= MAX_BREAKABLE_HARDNESS) return false;
+		if (pos.getY() == (int) (player.getY() - 2)) return false;
+		return true;
 	}
 
 	private static boolean checkHeldRose(Entity holder, LogSplinterEntity logSplinter, LevelAccessor world, double x, double y, double z) {
-		if (!(holder instanceof LivingEntity living))
-			return false;
+		if (!(holder instanceof LivingEntity living)) return false;
 
 		ItemStack main = living.getMainHandItem();
 		ItemStack off = living.getOffhandItem();
@@ -282,29 +475,28 @@ public class LogSplinterOnEntityTickUpdateProcedure {
 		boolean mainIsRose = main.getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem();
 		boolean offIsRose = off.getItem() == TheBackwoodsModBlocks.ASH_ROSE.get().asItem();
 
-		if (!mainIsRose && !offIsRose)
-			return false;
+		if (!mainIsRose && !offIsRose) return false;
 
 		setSpeed(logSplinter, 0);
-		if (logSplinter instanceof Mob mob) {
-			mob.getNavigation().stop();
-		}
+		stopNav(logSplinter);
 
-		if (mainIsRose)
-			tickRoseItem(main, world, x, y, z);
-		if (offIsRose)
-			tickRoseItem(off, world, x, y, z);
+		if (mainIsRose) tickRoseItem(main, world, x, y, z);
+		if (offIsRose) tickRoseItem(off, world, x, y, z);
 
 		return true;
 	}
 
 	private static void tickRoseItem(ItemStack rose, LevelAccessor world, double x, double y, double z) {
-		double wiltTimer = rose.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getDouble("wilt_timer") + 1;
+		double wiltTimer = rose.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getDouble("wilt_timer") + 1.0;
 		CustomData.update(DataComponents.CUSTOM_DATA, rose, tag -> tag.putDouble("wilt_timer", wiltTimer));
 
 		if (wiltTimer > ROSE_WILT_TICKS) {
 			if (world instanceof Level level) {
-				level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.fire.extinguish")), SoundSource.NEUTRAL, 1f, 1f);
+				if (!level.isClientSide()) {
+					level.playSound(null, BlockPos.containing(x, y, z), SoundEvents.FIRE_EXTINGUISH, SoundSource.NEUTRAL, 1f, 1f);
+				} else {
+					level.playLocalSound(x, y, z, SoundEvents.FIRE_EXTINGUISH, SoundSource.NEUTRAL, 1f, 1f, false);
+				}
 			}
 			rose.shrink(1);
 			CustomData.update(DataComponents.CUSTOM_DATA, rose, tag -> tag.putDouble("wilt_timer", 0));
@@ -312,10 +504,11 @@ public class LogSplinterOnEntityTickUpdateProcedure {
 	}
 
 	private static boolean checkNearbyRoseBlocks(LevelAccessor world, LogSplinterEntity logSplinter) {
+		BlockPos base = logSplinter.blockPosition();
 		for (int sx = -ROSE_SCAN_XZ; sx < ROSE_SCAN_XZ; sx++) {
 			for (int sy = -ROSE_SCAN_Y; sy < ROSE_SCAN_Y; sy++) {
 				for (int sz = -ROSE_SCAN_XZ; sz < ROSE_SCAN_XZ; sz++) {
-					BlockPos check = BlockPos.containing(logSplinter.getX() + sx, logSplinter.getY() + sy, logSplinter.getZ() + sz);
+					BlockPos check = base.offset(sx, sy, sz);
 					if (world.getBlockState(check).getBlock() == TheBackwoodsModBlocks.ASH_ROSE.get()) {
 						return true;
 					}
@@ -325,8 +518,60 @@ public class LogSplinterOnEntityTickUpdateProcedure {
 		return false;
 	}
 
-	private static Entity findEntityInWorldRange(LevelAccessor world, Class<? extends Entity> clazz, double x, double y, double z, double range) {
-		return world.getEntitiesOfClass(clazz, AABB.ofSize(new Vec3(x, y, z), range, range, range), e -> true)
-				.stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(x, y, z))).findFirst().orElse(null);
+	private static Player findNearestPlayerInRange(LevelAccessor world, double x, double y, double z, double range) {
+		AABB box = AABB.ofSize(new Vec3(x, y, z), range, range, range);
+		List<Player> players = world.getEntitiesOfClass(Player.class, box, e -> true);
+
+		Player nearest = null;
+		double best = range * range;
+		for (Player p : players) {
+			double d = p.distanceToSqr(x, y, z);
+			if (d < best) {
+				best = d;
+				nearest = p;
+			}
+		}
+		return nearest;
+	}
+
+	private static void stopNav(LogSplinterEntity logSplinter) {
+		if (logSplinter instanceof Mob mob) {
+			mob.getNavigation().stop();
+		}
+		logSplinter.getPersistentData().putInt(K_NAV_MODE, 0);
+	}
+
+	private static void navMoveToEntityThrottled(LogSplinterEntity logSplinter, Mob mob, Entity target, double speed, int mode) {
+		navMoveToPosThrottled(logSplinter, mob, target.getX(), target.getY(), target.getZ(), speed, mode);
+	}
+
+	private static void navMoveToPosThrottled(LogSplinterEntity logSplinter, Mob mob, double tx, double ty, double tz, double speed, int mode) {
+		int now = logSplinter.tickCount;
+		int lastTick = logSplinter.getPersistentData().getInt(K_NAV_LAST_TICK);
+		int lastMode = logSplinter.getPersistentData().getInt(K_NAV_MODE);
+
+		double lastTx = logSplinter.getPersistentData().getDouble(K_NAV_TX);
+		double lastTy = logSplinter.getPersistentData().getDouble(K_NAV_TY);
+		double lastTz = logSplinter.getPersistentData().getDouble(K_NAV_TZ);
+
+		boolean timerReady = (now - lastTick) >= PATH_RECALC_INTERVAL_TICKS;
+		boolean modeChanged = lastMode != mode;
+		boolean noLast = (lastTick == 0 && lastMode == 0 && lastTx == 0.0 && lastTy == 0.0 && lastTz == 0.0);
+
+		double movedSqr = noLast ? Double.MAX_VALUE : sqr(tx - lastTx) + sqr(ty - lastTy) + sqr(tz - lastTz);
+		boolean targetMovedEnough = movedSqr >= TARGET_MOVE_REPATH_DIST_SQR;
+
+		if (modeChanged || timerReady || targetMovedEnough || mob.getNavigation().isDone()) {
+			mob.getNavigation().moveTo(tx, ty, tz, speed);
+			logSplinter.getPersistentData().putInt(K_NAV_LAST_TICK, now);
+			logSplinter.getPersistentData().putInt(K_NAV_MODE, mode);
+			logSplinter.getPersistentData().putDouble(K_NAV_TX, tx);
+			logSplinter.getPersistentData().putDouble(K_NAV_TY, ty);
+			logSplinter.getPersistentData().putDouble(K_NAV_TZ, tz);
+		}
+	}
+
+	private static double sqr(double v) {
+		return v * v;
 	}
 }

@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "biome",
   "definition": {
     "name": "Stillwood",
@@ -63,6 +63,10 @@
       "min": 0.2,
       "max": 0.7
     },
+    "genDepth": {
+      "min": 0.2,
+      "max": 0.9
+    },
     "treesPerChunk": 0,
     "vanillaTreeType": "Default",
     "treeType": 0,
@@ -81,7 +85,7 @@
     },
     "defaultFeatures": [],
     "spawnStronghold": false,
-    "spawnMineshaft": true,
+    "spawnMineshaft": false,
     "spawnMineshaftMesa": false,
     "spawnPillagerOutpost": false,
     "villageType": "none",

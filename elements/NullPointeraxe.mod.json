@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "tool",
   "definition": {
     "toolType": "Axe",
@@ -10,6 +10,7 @@
     "blockingModelName": "Normal blocking",
     "guiTexture": "",
     "name": "Null Pointer Axe",
+    "rarity": "COMMON",
     "specialInformation": {
       "fixedValue": [
         "§8For testing only."
@@ -45,6 +46,7 @@
     "immuneToFire": true,
     "blockDropsTier": "NETHERITE",
     "blocksAffected": [],
+    "attributeModifiers": [],
     "stayInGridWhenCrafting": false,
     "damageOnCrafting": false
   }

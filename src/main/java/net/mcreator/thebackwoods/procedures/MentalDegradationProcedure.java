@@ -57,9 +57,11 @@ public class MentalDegradationProcedure {
 		double targetX = 0;
 		double targetZ = 0;
 		double targetY = 0;
+		double adaptation_multiplier = 0;
+		adaptation_multiplier = 0.15;
 		if ((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:backwoods"))) {
 			entity.getPersistentData().putDouble("backwoods_time", (entity.getPersistentData().getDouble("backwoods_time") + 1));
-			if (entity.getPersistentData().getDouble("backwoods_time") >= 24000) {
+			if (entity.getPersistentData().getDouble("backwoods_time") >= 31200 * (1 + entity.getData(TheBackwoodsModVariables.PLAYER_VARIABLES).backwoods_adaptation * adaptation_multiplier)) {
 				if (entity.getData(TheBackwoodsModVariables.PLAYER_VARIABLES).music_stopped_s4 == 0) {
 					if (world instanceof ServerLevel _level)
 						_level.getServer().getCommands().performPrefixedCommand(new CommandSourceStack(CommandSource.NULL, new Vec3(x, y, z), Vec2.ZERO, _level, 4, "", Component.literal(""), _level.getServer(), null).withSuppressedOutput(),
@@ -117,7 +119,7 @@ public class MentalDegradationProcedure {
 						}
 					}
 				}
-			} else if (entity.getPersistentData().getDouble("backwoods_time") >= 16800) {
+			} else if (entity.getPersistentData().getDouble("backwoods_time") >= 21840 * (1 + entity.getData(TheBackwoodsModVariables.PLAYER_VARIABLES).backwoods_adaptation * adaptation_multiplier)) {
 				if (entity.getData(TheBackwoodsModVariables.PLAYER_VARIABLES).music_stopped_s3 == 0) {
 					if (world instanceof ServerLevel _level)
 						_level.getServer().getCommands().performPrefixedCommand(new CommandSourceStack(CommandSource.NULL, new Vec3(x, y, z), Vec2.ZERO, _level, 4, "", Component.literal(""), _level.getServer(), null).withSuppressedOutput(),
@@ -216,7 +218,7 @@ public class MentalDegradationProcedure {
 						}
 					}
 				}
-			} else if (entity.getPersistentData().getDouble("backwoods_time") >= 9600) {
+			} else if (entity.getPersistentData().getDouble("backwoods_time") >= 12480 * (1 + entity.getData(TheBackwoodsModVariables.PLAYER_VARIABLES).backwoods_adaptation * adaptation_multiplier)) {
 				if (entity.getData(TheBackwoodsModVariables.PLAYER_VARIABLES).music_stopped_s2 == 0) {
 					if (world instanceof ServerLevel _level)
 						_level.getServer().getCommands().performPrefixedCommand(new CommandSourceStack(CommandSource.NULL, new Vec3(x, y, z), Vec2.ZERO, _level, 4, "", Component.literal(""), _level.getServer(), null).withSuppressedOutput(),
@@ -270,7 +272,7 @@ public class MentalDegradationProcedure {
 						}
 					}
 				}
-			} else if (entity.getPersistentData().getDouble("backwoods_time") >= 6000) {
+			} else if (entity.getPersistentData().getDouble("backwoods_time") >= 7800 * (1 + entity.getData(TheBackwoodsModVariables.PLAYER_VARIABLES).backwoods_adaptation * adaptation_multiplier)) {
 				if (Math.random() < 0.00043) {
 					if (world instanceof Level _level) {
 						if (!_level.isClientSide()) {
@@ -291,7 +293,8 @@ public class MentalDegradationProcedure {
 			}
 			if (entity.getPersistentData().getDouble("debug_mode") == 1) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
-					_player.displayClientMessage(Component.literal(("Backwoods Time: " + entity.getPersistentData().getDouble("backwoods_time"))), true);
+					_player.displayClientMessage(
+							Component.literal(("Backwoods Time: " + entity.getPersistentData().getDouble("backwoods_time") + " | Adaptation Points: " + entity.getData(TheBackwoodsModVariables.PLAYER_VARIABLES).backwoods_adaptation)), true);
 			}
 		} else {
 			{
@@ -300,6 +303,13 @@ public class MentalDegradationProcedure {
 				_vars.music_stopped_s3 = 0;
 				_vars.music_stopped_s4 = 0;
 				_vars.markSyncDirty();
+			}
+			if (entity.getPersistentData().getDouble("backwoods_time") >= 24000) {
+				{
+					TheBackwoodsModVariables.PlayerVariables _vars = entity.getData(TheBackwoodsModVariables.PLAYER_VARIABLES);
+					_vars.backwoods_adaptation = entity.getData(TheBackwoodsModVariables.PLAYER_VARIABLES).backwoods_adaptation + 1;
+					_vars.markSyncDirty();
+				}
 			}
 			entity.getPersistentData().putDouble("backwoods_time", 0);
 		}

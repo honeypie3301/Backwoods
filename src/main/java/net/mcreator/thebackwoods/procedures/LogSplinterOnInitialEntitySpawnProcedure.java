@@ -10,5 +10,7 @@ public class LogSplinterOnInitialEntitySpawnProcedure {
 			return;
 		if (entity instanceof LivingEntity _livingEntity0 && _livingEntity0.getAttributes().hasAttribute(Attributes.SAFE_FALL_DISTANCE))
 			_livingEntity0.getAttribute(Attributes.SAFE_FALL_DISTANCE).setBaseValue(8);
+		if (entity instanceof LivingEntity _livingEntity1 && _livingEntity1.getAttributes().hasAttribute(Attributes.WATER_MOVEMENT_EFFICIENCY))
+			_livingEntity1.getAttribute(Attributes.WATER_MOVEMENT_EFFICIENCY).setBaseValue(0.4);
 	}
 }

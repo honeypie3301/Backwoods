@@ -19,6 +19,8 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 public class BlindspotSplinterRenderer extends HumanoidMobRenderer<BlindspotSplinterEntity, HumanoidModel<BlindspotSplinterEntity>> {
+	private final ResourceLocation entityTexture = ResourceLocation.parse("the_backwoods:textures/entities/oak_biped.png");
+
 	public BlindspotSplinterRenderer(EntityRendererProvider.Context context) {
 		super(context, new HumanoidModel<BlindspotSplinterEntity>(context.bakeLayer(ModelLayers.PLAYER)), 0.5f);
 		this.addLayer(new HumanoidArmorLayer(this, new HumanoidModel(context.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR)), new HumanoidModel(context.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR)), context.getModelManager()));
@@ -161,6 +163,6 @@ public class BlindspotSplinterRenderer extends HumanoidMobRenderer<BlindspotSpli
 
 	@Override
 	public ResourceLocation getTextureLocation(BlindspotSplinterEntity entity) {
-		return ResourceLocation.parse("the_backwoods:textures/entities/oak_biped.png");
+		return entityTexture;
 	}
 }

@@ -29,9 +29,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.BlockPos;
 
+import net.mcreator.thebackwoods.procedures.StiltWalkerOnInitialEntitySpawnProcedure;
 import net.mcreator.thebackwoods.procedures.StiltWalkerOnEntityTickUpdateProcedure;
 import net.mcreator.thebackwoods.procedures.StiltWalkerNaturalEntitySpawningConditionProcedure;
-import net.mcreator.thebackwoods.procedures.SplinterOnInitialEntitySpawnProcedure;
 import net.mcreator.thebackwoods.init.TheBackwoodsModEntities;
 
 import javax.annotation.Nullable;
@@ -101,7 +101,7 @@ public class StiltWalkerEntity extends Monster {
 	@Override
 	public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType reason, @Nullable SpawnGroupData livingdata) {
 		SpawnGroupData retval = super.finalizeSpawn(world, difficulty, reason, livingdata);
-		SplinterOnInitialEntitySpawnProcedure.execute(this);
+		StiltWalkerOnInitialEntitySpawnProcedure.execute(this);
 		return retval;
 	}
 

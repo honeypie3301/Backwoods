@@ -19,6 +19,8 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 public class SplinterRenderer extends HumanoidMobRenderer<SplinterEntity, HumanoidModel<SplinterEntity>> {
+	private final ResourceLocation entityTexture = ResourceLocation.parse("the_backwoods:textures/entities/oak_biped.png");
+
 	public SplinterRenderer(EntityRendererProvider.Context context) {
 		super(context, new HumanoidModel<SplinterEntity>(context.bakeLayer(ModelLayers.PLAYER)), 0.5f);
 		this.addLayer(new HumanoidArmorLayer(this, new HumanoidModel(context.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR)), new HumanoidModel(context.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR)), context.getModelManager()));
@@ -161,6 +163,6 @@ public class SplinterRenderer extends HumanoidMobRenderer<SplinterEntity, Humano
 
 	@Override
 	public ResourceLocation getTextureLocation(SplinterEntity entity) {
-		return ResourceLocation.parse("the_backwoods:textures/entities/oak_biped.png");
+		return entityTexture;
 	}
 }

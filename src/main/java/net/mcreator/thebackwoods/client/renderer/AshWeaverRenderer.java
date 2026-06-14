@@ -10,6 +10,8 @@ import net.minecraft.client.model.HumanoidModel;
 import net.mcreator.thebackwoods.entity.AshWeaverEntity;
 
 public class AshWeaverRenderer extends HumanoidMobRenderer<AshWeaverEntity, HumanoidModel<AshWeaverEntity>> {
+	private final ResourceLocation entityTexture = ResourceLocation.parse("the_backwoods:textures/entities/pale_oak_biped.png");
+
 	public AshWeaverRenderer(EntityRendererProvider.Context context) {
 		super(context, new HumanoidModel<AshWeaverEntity>(context.bakeLayer(ModelLayers.PLAYER)), 0.5f);
 		this.addLayer(new HumanoidArmorLayer(this, new HumanoidModel(context.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR)), new HumanoidModel(context.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR)), context.getModelManager()));
@@ -17,6 +19,6 @@ public class AshWeaverRenderer extends HumanoidMobRenderer<AshWeaverEntity, Huma
 
 	@Override
 	public ResourceLocation getTextureLocation(AshWeaverEntity entity) {
-		return ResourceLocation.parse("the_backwoods:textures/entities/pale_oak_biped.png");
+		return entityTexture;
 	}
 }

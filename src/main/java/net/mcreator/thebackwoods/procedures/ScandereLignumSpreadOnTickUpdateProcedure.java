@@ -1,5 +1,5 @@
 package net.mcreator.thebackwoods.procedures;
-
+// 1.21.1 neo
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
@@ -82,6 +82,7 @@ public class ScandereLignumSpreadOnTickUpdateProcedure {
 		spreadDelay = Math.max(1, spreadDelay - fertilizeBoost);
 
 		BlockState targetState = world.getBlockState(target);
+		if (world.getBlockEntity(target) != null) return;
 
 		// Basic exclusions
 		if (targetState.isAir()) return;

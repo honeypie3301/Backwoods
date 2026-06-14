@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "biome",
   "definition": {
     "name": "The Thicket",
@@ -62,6 +62,10 @@
     "genWeirdness": {
       "min": 0.3,
       "max": 0.7
+    },
+    "genDepth": {
+      "min": 0.2,
+      "max": 0.9
     },
     "treesPerChunk": 1,
     "vanillaTreeType": "Default",

@@ -1,5 +1,5 @@
 package net.mcreator.thebackwoods.procedures;
-
+// 1.21.1 neoforge
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -24,14 +24,14 @@ import java.util.Set;
 public class GrainFireDefenseProcedure {
 
     private static final int CHECK_INTERVAL_TICKS = 8;
-    private static final int FIRE_SCAN_RADIUS_XZ = 28;
-    private static final int FIRE_SCAN_RADIUS_Y = 12;
+    private static final int FIRE_SCAN_RADIUS_XZ = 128;
+    private static final int FIRE_SCAN_RADIUS_Y = 48;
     private static final int BIG_FIRE_THRESHOLD = 40; 
     private static final int PURGE_COOLDOWN_TICKS = 20 * 6; // 6 sec
 
     private static final String NBT_COOLDOWN_KEY = "grain_fire_purge_cd";
 
-    private static final ResourceKey<Level> THE_GRAIN = ResourceKey.create(
+	private static final ResourceKey<Level> THE_GRAIN = ResourceKey.create(
             Registries.DIMENSION,
             ResourceLocation.parse("the_backwoods:the_grain")
     );
@@ -41,8 +41,15 @@ public class GrainFireDefenseProcedure {
             ResourceLocation.parse("the_backwoods:backwoods")
     );
 
-    private static final Set<ResourceKey<Level>> VALID_DIMENSIONS = Set.of(THE_GRAIN, BACKWOODS);
+    // 1. Declare the resource key for the sub strata dimension
+    private static final ResourceKey<Level> THE_SUB_STRATA = ResourceKey.create(
+            Registries.DIMENSION,
+            ResourceLocation.parse("the_backwoods:the_sub_strata")
+    );
 
+    // 2. Add it to the immutable Set of allowed dimensions
+    private static final Set<ResourceKey<Level>> VALID_DIMENSIONS = Set.of(THE_GRAIN, BACKWOODS, THE_SUB_STRATA);
+    
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         Player player = event.getEntity();
@@ -87,11 +94,15 @@ public class GrainFireDefenseProcedure {
 
     private static int countFireInRadius(Level level, BlockPos center) {
         int count = 0;
-        for (int dx = -FIRE_SCAN_RADIUS_XZ; dx <= FIRE_SCAN_RADIUS_XZ; dx++) {
-            for (int dz = -FIRE_SCAN_RADIUS_XZ; dz <= FIRE_SCAN_RADIUS_XZ; dz++) {
-                for (int dy = -FIRE_SCAN_RADIUS_Y; dy <= FIRE_SCAN_RADIUS_Y; dy++) {
-                    BlockPos p = center.offset(dx, dy, dz);
-                    if (isFire(level.getBlockState(p))) count++;
+        BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
+        int cx = center.getX();
+        int cy = center.getY();
+        int cz = center.getZ();
+        for (int dx = -FIRE_SCAN_RADIUS_XZ; dx <= FIRE_SCAN_RADIUS_XZ; dx += 4) {
+            for (int dz = -FIRE_SCAN_RADIUS_XZ; dz <= FIRE_SCAN_RADIUS_XZ; dz += 4) {
+                for (int dy = -FIRE_SCAN_RADIUS_Y; dy <= FIRE_SCAN_RADIUS_Y; dy += 4) {
+                    p.set(cx + dx, cy + dy, cz + dz);
+                    if (isFire(level.getBlockState(p))) count += 64;
                 }
             }
         }
@@ -99,12 +110,22 @@ public class GrainFireDefenseProcedure {
     }
 
     private static void purgeFireInRadius(Level level, BlockPos center) {
-        for (int dx = -FIRE_SCAN_RADIUS_XZ; dx <= FIRE_SCAN_RADIUS_XZ; dx++) {
-            for (int dz = -FIRE_SCAN_RADIUS_XZ; dz <= FIRE_SCAN_RADIUS_XZ; dz++) {
-                for (int dy = -FIRE_SCAN_RADIUS_Y; dy <= FIRE_SCAN_RADIUS_Y; dy++) {
-                    BlockPos p = center.offset(dx, dy, dz);
-                    if (isFire(level.getBlockState(p))) {
-                        level.setBlock(p, Blocks.AIR.defaultBlockState(), 3);
+        BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
+        int cx = center.getX();
+        int cy = center.getY();
+        int cz = center.getZ();
+        for (int dx = -FIRE_SCAN_RADIUS_XZ; dx <= FIRE_SCAN_RADIUS_XZ; dx += 2) {
+            for (int dz = -FIRE_SCAN_RADIUS_XZ; dz <= FIRE_SCAN_RADIUS_XZ; dz += 2) {
+                for (int dy = -FIRE_SCAN_RADIUS_Y; dy <= FIRE_SCAN_RADIUS_Y; dy += 2) {
+                    for (int ox = 0; ox < 2; ox++) {
+                        for (int oy = 0; oy < 2; oy++) {
+                            for (int oz = 0; oz < 2; oz++) {
+                                p.set(cx + dx + ox, cy + dy + oy, cz + dz + oz);
+                                if (isFire(level.getBlockState(p))) {
+                                    level.setBlock(p, Blocks.AIR.defaultBlockState(), 3);
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -73,6 +73,7 @@ public class TheBackwoodsModVariables {
 		clone.daysInFamiliar = original.daysInFamiliar;
 		clone.lossProgress = original.lossProgress;
 		clone.lossTimer = original.lossTimer;
+		clone.backwoods_adaptation = original.backwoods_adaptation;
 		if (!event.isWasDeath()) {
 		}
 		event.getEntity().setData(PLAYER_VARIABLES, clone);
@@ -87,6 +88,7 @@ public class TheBackwoodsModVariables {
 		public double daysInFamiliar = 0;
 		public double lossProgress = 0.0;
 		public double lossTimer = 0;
+		public double backwoods_adaptation = 0;
 
 		@Override
 		public CompoundTag serializeNBT(HolderLookup.Provider lookupProvider) {
@@ -98,6 +100,7 @@ public class TheBackwoodsModVariables {
 			nbt.putDouble("daysInFamiliar", daysInFamiliar);
 			nbt.putDouble("lossProgress", lossProgress);
 			nbt.putDouble("lossTimer", lossTimer);
+			nbt.putDouble("backwoods_adaptation", backwoods_adaptation);
 			return nbt;
 		}
 
@@ -110,6 +113,7 @@ public class TheBackwoodsModVariables {
 			daysInFamiliar = nbt.getDouble("daysInFamiliar");
 			lossProgress = nbt.getDouble("lossProgress");
 			lossTimer = nbt.getDouble("lossTimer");
+			backwoods_adaptation = nbt.getDouble("backwoods_adaptation");
 		}
 
 		public void markSyncDirty() {

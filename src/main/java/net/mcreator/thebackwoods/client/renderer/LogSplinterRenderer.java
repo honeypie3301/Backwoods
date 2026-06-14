@@ -19,6 +19,8 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 public class LogSplinterRenderer extends HumanoidMobRenderer<LogSplinterEntity, HumanoidModel<LogSplinterEntity>> {
+	private final ResourceLocation entityTexture = ResourceLocation.parse("the_backwoods:textures/entities/oak_log_biped.png");
+
 	public LogSplinterRenderer(EntityRendererProvider.Context context) {
 		super(context, new HumanoidModel<LogSplinterEntity>(context.bakeLayer(ModelLayers.PLAYER)), 0.5f);
 		this.addLayer(new HumanoidArmorLayer(this, new HumanoidModel(context.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR)), new HumanoidModel(context.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR)), context.getModelManager()));
@@ -146,6 +148,6 @@ public class LogSplinterRenderer extends HumanoidMobRenderer<LogSplinterEntity, 
 
 	@Override
 	public ResourceLocation getTextureLocation(LogSplinterEntity entity) {
-		return ResourceLocation.parse("the_backwoods:textures/entities/oak_log_biped.png");
+		return entityTexture;
 	}
 }

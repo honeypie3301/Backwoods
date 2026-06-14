@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "biome",
   "definition": {
     "name": "Rotting Deep",
@@ -78,6 +78,10 @@
     "genWeirdness": {
       "min": -1.0E-4,
       "max": 0.0
+    },
+    "genDepth": {
+      "min": 0.2,
+      "max": 0.9
     },
     "treesPerChunk": 0,
     "vanillaTreeType": "Default",

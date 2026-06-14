@@ -10,6 +10,8 @@
           "name": "the_backwoods:petrified_rotten_oak_slab",
           "functions": [
             {
+              "function": "minecraft:set_count",
+              "count": 2,
               "conditions": [
                 {
                   "condition": "minecraft:block_state_property",
@@ -18,9 +20,7 @@
                     "type": "double"
                   }
                 }
-              ],
-              "count": 2.0,
-              "function": "minecraft:set_count"
+              ]
             },
             {
               "function": "minecraft:explosion_decay"

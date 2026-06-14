@@ -10,7 +10,7 @@
     "foliage_provider": {
       "type": "minecraft:simple_state_provider",
       "state": {
-        "Name": "minecraft:oak_planks"
+        "Name": "the_backwoods:false_oak_planks"
       }
     },
     "trunk_provider": {

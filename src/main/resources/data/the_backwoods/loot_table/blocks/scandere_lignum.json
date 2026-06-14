@@ -21,7 +21,7 @@
         {
           "type": "minecraft:item",
           "name": "minecraft:bone_meal",
-          "weight": 10,
+          "weight": 20,
           "conditions": [
             {
               "condition": "minecraft:inverted",

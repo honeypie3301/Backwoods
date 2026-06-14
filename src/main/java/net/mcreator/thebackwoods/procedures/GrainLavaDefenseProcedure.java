@@ -24,14 +24,14 @@ import java.util.Set;
 public class GrainLavaDefenseProcedure {
 
     private static final int CHECK_INTERVAL_TICKS = 8;
-    private static final int LAVA_SCAN_RADIUS_XZ = 28;
-    private static final int LAVA_SCAN_RADIUS_Y = 12;
+    private static final int LAVA_SCAN_RADIUS_XZ = 64;
+    private static final int LAVA_SCAN_RADIUS_Y = 24;
     private static final int BIG_LAVA_THRESHOLD = 10;
     private static final int PURGE_COOLDOWN_TICKS = 20 * 6; // 6 sec
 
     private static final String NBT_COOLDOWN_KEY = "grain_lava_purge_cd";
 
-    private static final ResourceKey<Level> THE_GRAIN = ResourceKey.create(
+	private static final ResourceKey<Level> THE_GRAIN = ResourceKey.create(
             Registries.DIMENSION,
             ResourceLocation.parse("the_backwoods:the_grain")
     );
@@ -41,7 +41,14 @@ public class GrainLavaDefenseProcedure {
             ResourceLocation.parse("the_backwoods:backwoods")
     );
 
-    private static final Set<ResourceKey<Level>> VALID_DIMENSIONS = Set.of(THE_GRAIN, BACKWOODS);
+    // 1. Declare the resource key for the sub strata dimension
+    private static final ResourceKey<Level> THE_SUB_STRATA = ResourceKey.create(
+            Registries.DIMENSION,
+            ResourceLocation.parse("the_backwoods:the_sub_strata")
+    );
+
+    // 2. Add it to the immutable Set of allowed dimensions
+    private static final Set<ResourceKey<Level>> VALID_DIMENSIONS = Set.of(THE_GRAIN, BACKWOODS, THE_SUB_STRATA);
 
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
@@ -82,11 +89,11 @@ public class GrainLavaDefenseProcedure {
 
     private static int countLavaInRadius(Level level, BlockPos center) {
         int count = 0;
-        for (int dx = -LAVA_SCAN_RADIUS_XZ; dx <= LAVA_SCAN_RADIUS_XZ; dx++) {
-            for (int dz = -LAVA_SCAN_RADIUS_XZ; dz <= LAVA_SCAN_RADIUS_XZ; dz++) {
-                for (int dy = -LAVA_SCAN_RADIUS_Y; dy <= LAVA_SCAN_RADIUS_Y; dy++) {
+        for (int dx = -LAVA_SCAN_RADIUS_XZ; dx <= LAVA_SCAN_RADIUS_XZ; dx += 2) {
+            for (int dz = -LAVA_SCAN_RADIUS_XZ; dz <= LAVA_SCAN_RADIUS_XZ; dz += 2) {
+                for (int dy = -LAVA_SCAN_RADIUS_Y; dy <= LAVA_SCAN_RADIUS_Y; dy += 2) {
                     BlockPos p = center.offset(dx, dy, dz);
-                    if (isLava(level.getBlockState(p))) count++;
+                    if (isLava(level.getBlockState(p))) count += 8;
                 }
             }
         }

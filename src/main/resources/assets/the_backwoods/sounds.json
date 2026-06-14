@@ -263,15 +263,6 @@
       }
     ]
   },
-  "degradation_r1": {
-    "subtitle": "subtitles.degradation_r1",
-    "sounds": [
-      {
-        "name": "the_backwoods:r1_stage6",
-        "stream": false
-      }
-    ]
-  },
   "degradation_o1": {
     "subtitle": "subtitles.degradation_o1",
     "sounds": [
@@ -530,6 +521,168 @@
       {
         "name": "the_backwoods:174._wake_up",
         "stream": true
+      }
+    ]
+  },
+  "vermis_idle": {
+    "subtitle": "subtitles.vermis_idle",
+    "sounds": [
+      {
+        "name": "the_backwoods:vermis_idle4",
+        "stream": false
+      },
+      {
+        "name": "the_backwoods:vermis_idle3",
+        "stream": false
+      },
+      {
+        "name": "the_backwoods:vermis_idle2",
+        "stream": false
+      },
+      {
+        "name": "the_backwoods:vermis_idle1",
+        "stream": false
+      }
+    ]
+  },
+  "vermis_hurt": {
+    "subtitle": "subtitles.vermis_hurt",
+    "sounds": [
+      {
+        "name": "the_backwoods:vermis_hurt3",
+        "stream": false
+      },
+      {
+        "name": "the_backwoods:vermis_hurt2",
+        "stream": false
+      },
+      {
+        "name": "the_backwoods:vermis_hurt1",
+        "stream": false
+      }
+    ]
+  },
+  "vermis_step": {
+    "subtitle": "subtitles.vermis_step",
+    "sounds": [
+      {
+        "name": "the_backwoods:vermis_step2",
+        "stream": false
+      },
+      {
+        "name": "the_backwoods:vermis_step1",
+        "stream": false
+      }
+    ]
+  },
+  "vermis_death": {
+    "subtitle": "subtitles.vermis_death",
+    "sounds": [
+      {
+        "name": "the_backwoods:vermis_death",
+        "stream": false
+      }
+    ]
+  },
+  "gigas_hurt": {
+    "subtitle": "subtitles.gigas_hurt",
+    "sounds": [
+      {
+        "name": "the_backwoods:gigas_hurt1",
+        "stream": false
+      },
+      {
+        "name": "the_backwoods:gigas_hurt2",
+        "stream": false
+      }
+    ]
+  },
+  "gigas_death": {
+    "subtitle": "subtitles.gigas_death",
+    "sounds": [
+      {
+        "name": "the_backwoods:gigas_death",
+        "stream": false
+      }
+    ]
+  },
+  "fractus_idle": {
+    "subtitle": "subtitles.fractus_idle",
+    "sounds": [
+      {
+        "name": "the_backwoods:fractus_idle",
+        "stream": false
+      }
+    ]
+  },
+  "fractus_death": {
+    "subtitle": "subtitles.fractus_death",
+    "sounds": [
+      {
+        "name": "the_backwoods:fractus_death",
+        "stream": false
+      }
+    ]
+  },
+  "fractus_hurt": {
+    "subtitle": "subtitles.fractus_hurt",
+    "sounds": [
+      {
+        "name": "the_backwoods:fractus_hurt3",
+        "stream": false
+      },
+      {
+        "name": "the_backwoods:fractus_hurt2",
+        "stream": false
+      },
+      {
+        "name": "the_backwoods:fractus_hurt1",
+        "stream": false
+      }
+    ]
+  },
+  "fractus_laser": {
+    "subtitle": "subtitles.fractus_laser",
+    "sounds": [
+      {
+        "name": "the_backwoods:fractus_laser",
+        "stream": false
+      }
+    ]
+  },
+  "fractus_anger": {
+    "subtitle": "subtitles.fractus_anger",
+    "sounds": [
+      {
+        "name": "the_backwoods:fractus_anger",
+        "stream": false
+      }
+    ]
+  },
+  "fractus_laser_burst": {
+    "subtitle": "subtitles.fractus_laser_burst",
+    "sounds": [
+      {
+        "name": "the_backwoods:fractus_laser_burst_2",
+        "stream": false
+      }
+    ]
+  },
+  "fractus_prime_laser_burst": {
+    "subtitle": "subtitles.fractus_prime_laser_burst",
+    "sounds": [
+      {
+        "name": "the_backwoods:fractus_laser_burst_large",
+        "stream": false
+      }
+    ]
+  },
+  "fractus_prime_laser_sphere_burst": {
+    "subtitle": "subtitles.fractus_prime_laser_sphere_burst",
+    "sounds": [
+      {
+        "name": "the_backwoods:fractus_prime_laser_sphere_burst_2",
+        "stream": false
       }
     ]
   }

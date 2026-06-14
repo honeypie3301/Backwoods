@@ -19,11 +19,13 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 public class RotRenderer extends HumanoidMobRenderer<RotEntity, HumanoidModel<RotEntity>> {
+	private final ResourceLocation entityTexture = ResourceLocation.parse("the_backwoods:textures/entities/rot_biped_base.png");
+
 	public RotRenderer(EntityRendererProvider.Context context) {
 		super(context, new HumanoidModel<RotEntity>(context.bakeLayer(ModelLayers.PLAYER)), 0.7f);
 		this.addLayer(new HumanoidArmorLayer(this, new HumanoidModel(context.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR)), new HumanoidModel(context.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR)), context.getModelManager()));
 		this.addLayer(new RenderLayer<RotEntity, HumanoidModel<RotEntity>>(this) {
-			final ResourceLocation LAYER_TEXTURE = ResourceLocation.parse("the_backwoods:textures/entities/oak_biped.png");
+			final ResourceLocation LAYER_TEXTURE = ResourceLocation.parse("the_backwoods:textures/entities/rot_layer1.png");
 
 			@Override
 			public void render(PoseStack poseStack, MultiBufferSource bufferSource, int light, RotEntity entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
@@ -136,6 +138,6 @@ public class RotRenderer extends HumanoidMobRenderer<RotEntity, HumanoidModel<Ro
 
 	@Override
 	public ResourceLocation getTextureLocation(RotEntity entity) {
-		return ResourceLocation.parse("the_backwoods:textures/entities/rot_biped_base.png");
+		return entityTexture;
 	}
 }

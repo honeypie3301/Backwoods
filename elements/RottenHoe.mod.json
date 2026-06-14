@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "tool",
   "definition": {
     "toolType": "Hoe",
@@ -10,6 +10,7 @@
     "blockingModelName": "Normal blocking",
     "guiTexture": "",
     "name": "Rotten Hoe",
+    "rarity": "COMMON",
     "specialInformation": {
       "fixedValue": []
     },
@@ -34,6 +35,7 @@
     "immuneToFire": false,
     "blockDropsTier": "IRON",
     "blocksAffected": [],
+    "attributeModifiers": [],
     "stayInGridWhenCrafting": false,
     "damageOnCrafting": false
   }

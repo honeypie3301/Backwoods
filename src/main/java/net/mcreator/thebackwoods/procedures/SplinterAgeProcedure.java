@@ -27,7 +27,7 @@ public class SplinterAgeProcedure {
 	private static void execute(@Nullable Event event, Entity entity) {
 		if (entity == null)
 			return;
-		if (!(entity == null)) {
+		if (entity != null) {
 			if (entity instanceof SplinterEntity || entity instanceof LogSplinterEntity || entity instanceof BlindspotSplinterEntity) {
 				if (entity instanceof SplinterEntity _datEntSetI)
 					_datEntSetI.getEntityData().set(SplinterEntity.DATA_Age, (int) ((entity instanceof SplinterEntity _datEntI ? _datEntI.getEntityData().get(SplinterEntity.DATA_Age) : 0) + 1));

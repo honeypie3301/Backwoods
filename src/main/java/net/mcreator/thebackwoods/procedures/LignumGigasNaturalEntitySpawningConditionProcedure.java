@@ -20,9 +20,9 @@ public class LignumGigasNaturalEntitySpawningConditionProcedure {
 	private static final int GIGAS_COUNT = 7;
 	private static final int EXISTING_SCAN_RADIUS = 950;
 
-	private static final float RARE_CHANCE = 0.9f; // test only
+	private static final float RARE_CHANCE = 0.00001f;
 	private static long lastRingSpawnGameTime = -999999L;
-	private static final long RING_SPAWN_COOLDOWN_TICKS = 20L * 10L; // 10 sec test
+	private static final long RING_SPAWN_COOLDOWN_TICKS = 20L * 90L; // multiplied by seconds
 
 	private static final int MIN_Y = 63;
 	private static final int EXTRA_SPAWN_Y = 0; // slight lift so giant feet don't clip

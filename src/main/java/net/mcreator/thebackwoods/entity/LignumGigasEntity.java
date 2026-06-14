@@ -67,12 +67,12 @@ public class LignumGigasEntity extends Monster {
 
 	@Override
 	public SoundEvent getHurtSound(DamageSource ds) {
-		return BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("entity.generic.hurt"));
+		return BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:gigas_hurt"));
 	}
 
 	@Override
 	public SoundEvent getDeathSound() {
-		return BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("entity.generic.death"));
+		return BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("the_backwoods:gigas_death"));
 	}
 
 	@Override
@@ -168,7 +168,7 @@ public class LignumGigasEntity extends Monster {
 
 	@Override
 	public EntityDimensions getDefaultDimensions(Pose pose) {
-		return super.getDefaultDimensions(pose).scale(14f);
+		return super.getDefaultDimensions(pose).scale(28.5f);
 	}
 
 	public static void init(RegisterSpawnPlacementsEvent event) {

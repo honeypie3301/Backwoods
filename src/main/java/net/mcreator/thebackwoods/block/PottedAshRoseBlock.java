@@ -9,7 +9,6 @@ import net.minecraft.world.level.block.FlowerPotBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.resources.ResourceLocation;
@@ -24,11 +23,6 @@ public class PottedAshRoseBlock extends FlowerPotBlock {
 	public PottedAshRoseBlock() {
 		super(() -> (FlowerPotBlock) Blocks.FLOWER_POT, () -> TheBackwoodsModBlocks.ASH_ROSE.get(), BlockBehaviour.Properties.of().strength(1f, 0f).noOcclusion().pushReaction(PushReaction.DESTROY).isRedstoneConductor((bs, br, bp) -> false));
 		((FlowerPotBlock) Blocks.FLOWER_POT).addPlant(ResourceLocation.parse("the_backwoods:ash_rose"), () -> this);
-	}
-
-	@Override
-	public int getLightBlock(BlockState state, BlockGetter worldIn, BlockPos pos) {
-		return 0;
 	}
 
 	@Override

@@ -7,15 +7,16 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.HierarchicalModel;
 
 import net.mcreator.thebackwoods.entity.LignumGigasEntity;
-import net.mcreator.thebackwoods.client.model.animations.LignumGigas_1Animation;
-import net.mcreator.thebackwoods.client.model.animations.LignumGigasAnimation;
-import net.mcreator.thebackwoods.client.model.ModelLignumGigas;
+import net.mcreator.thebackwoods.client.model.animations.LignumGigas_2Animation;
+import net.mcreator.thebackwoods.client.model.ModelLignumGigas_1;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
-public class LignumGigasRenderer extends MobRenderer<LignumGigasEntity, ModelLignumGigas<LignumGigasEntity>> {
+public class LignumGigasRenderer extends MobRenderer<LignumGigasEntity, ModelLignumGigas_1<LignumGigasEntity>> {
+	private final ResourceLocation entityTexture = ResourceLocation.parse("the_backwoods:textures/entities/gigas_skin.png");
+
 	public LignumGigasRenderer(EntityRendererProvider.Context context) {
-		super(context, new AnimatedModel(context.bakeLayer(ModelLignumGigas.LAYER_LOCATION)), 1f);
+		super(context, new AnimatedModel(context.bakeLayer(ModelLignumGigas_1.LAYER_LOCATION)), 1f);
 	}
 
 	@Override
@@ -25,10 +26,10 @@ public class LignumGigasRenderer extends MobRenderer<LignumGigasEntity, ModelLig
 
 	@Override
 	public ResourceLocation getTextureLocation(LignumGigasEntity entity) {
-		return ResourceLocation.parse("the_backwoods:textures/entities/lignumgigas.png");
+		return entityTexture;
 	}
 
-	private static final class AnimatedModel extends ModelLignumGigas<LignumGigasEntity> {
+	private static final class AnimatedModel extends ModelLignumGigas_1<LignumGigasEntity> {
 		private final ModelPart root;
 		private final HierarchicalModel animator = new HierarchicalModel<LignumGigasEntity>() {
 			@Override
@@ -39,8 +40,8 @@ public class LignumGigasRenderer extends MobRenderer<LignumGigasEntity, ModelLig
 			@Override
 			public void setupAnim(LignumGigasEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
 				this.root().getAllParts().forEach(ModelPart::resetPose);
-				this.animate(entity.animationState0, LignumGigasAnimation.low_health_attack, ageInTicks, 1f);
-				this.animate(entity.animationState1, LignumGigas_1Animation.reverse_low_health_attack, ageInTicks, 1f);
+				this.animate(entity.animationState0, LignumGigas_2Animation.low_health_attack, ageInTicks, 1f);
+				this.animate(entity.animationState1, LignumGigas_2Animation.reverse_low_health_attack, ageInTicks, 1f);
 			}
 		};
 

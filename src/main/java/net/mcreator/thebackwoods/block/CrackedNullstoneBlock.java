@@ -10,10 +10,8 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
 
 public class CrackedNullstoneBlock extends Block {
 	public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
@@ -21,11 +19,6 @@ public class CrackedNullstoneBlock extends Block {
 	public CrackedNullstoneBlock() {
 		super(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).sound(SoundType.EMPTY).strength(1.8f, 6f).requiresCorrectToolForDrops());
 		this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
-	}
-
-	@Override
-	public int getLightBlock(BlockState state, BlockGetter worldIn, BlockPos pos) {
-		return 15;
 	}
 
 	@Override

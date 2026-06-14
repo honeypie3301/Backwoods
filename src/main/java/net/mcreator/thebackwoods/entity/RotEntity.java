@@ -7,12 +7,9 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.Explosion;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
@@ -36,7 +33,6 @@ import net.minecraft.core.BlockPos;
 
 import net.mcreator.thebackwoods.procedures.RotOnInitialEntitySpawnProcedure;
 import net.mcreator.thebackwoods.procedures.RotOnEntityTickUpdateProcedure;
-import net.mcreator.thebackwoods.procedures.RotEntityIsHurtProcedure;
 import net.mcreator.thebackwoods.procedures.RotEntityDiesProcedure;
 import net.mcreator.thebackwoods.init.TheBackwoodsModItems;
 
@@ -47,8 +43,9 @@ public class RotEntity extends Monster {
 	public static final EntityDataAccessor<Integer> DATA_mineX = SynchedEntityData.defineId(RotEntity.class, EntityDataSerializers.INT);
 	public static final EntityDataAccessor<Integer> DATA_mineY = SynchedEntityData.defineId(RotEntity.class, EntityDataSerializers.INT);
 	public static final EntityDataAccessor<Integer> DATA_mineZ = SynchedEntityData.defineId(RotEntity.class, EntityDataSerializers.INT);
-	public static final EntityDataAccessor<Integer> DATA_animationTimer = SynchedEntityData.defineId(RotEntity.class, EntityDataSerializers.INT);
-	public static final EntityDataAccessor<Integer> DATA_sonicCooldown = SynchedEntityData.defineId(RotEntity.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<Integer> DATA_sentinel_solar_charge_ticks = SynchedEntityData.defineId(RotEntity.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<Integer> DATA_sentinel_cryo_charge_ticks = SynchedEntityData.defineId(RotEntity.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<Boolean> DATA_is_laser_firing = SynchedEntityData.defineId(RotEntity.class, EntityDataSerializers.BOOLEAN);
 
 	public RotEntity(EntityType<RotEntity> type, Level world) {
 		super(type, world);
@@ -64,8 +61,9 @@ public class RotEntity extends Monster {
 		builder.define(DATA_mineX, 0);
 		builder.define(DATA_mineY, 0);
 		builder.define(DATA_mineZ, 0);
-		builder.define(DATA_animationTimer, 0);
-		builder.define(DATA_sonicCooldown, 0);
+		builder.define(DATA_sentinel_solar_charge_ticks, 0);
+		builder.define(DATA_sentinel_cryo_charge_ticks, 0);
+		builder.define(DATA_is_laser_firing, false);
 	}
 
 	@Override
@@ -74,15 +72,13 @@ public class RotEntity extends Monster {
 		this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.2, false) {
 			@Override
 			protected boolean canPerformAttack(LivingEntity entity) {
-				return this.isTimeToAttack() && this.mob.distanceToSqr(entity) < 25 && this.mob.getSensing().hasLineOfSight(entity);
+				return this.isTimeToAttack() && this.mob.distanceToSqr(entity) < 4 && this.mob.getSensing().hasLineOfSight(entity);
 			}
 		});
-		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal(this, Mob.class, true, false));
+		this.goalSelector.addGoal(2, new BreakDoorGoal(this, e -> true));
 		this.goalSelector.addGoal(3, new RandomStrollGoal(this, 0.6));
 		this.targetSelector.addGoal(4, new HurtByTargetGoal(this));
-		this.targetSelector.addGoal(5, new NearestAttackableTargetGoal(this, Player.class, true, false));
-		this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, (float) 32));
-		this.goalSelector.addGoal(7, new BreakDoorGoal(this, e -> true));
+		this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, (float) 32));
 	}
 
 	@Override
@@ -117,29 +113,9 @@ public class RotEntity extends Monster {
 
 	@Override
 	public boolean hurt(DamageSource damagesource, float amount) {
-		double x = this.getX();
-		double y = this.getY();
-		double z = this.getZ();
-		Level world = this.level();
-		Entity entity = this;
-		Entity sourceentity = damagesource.getEntity();
-		Entity immediatesourceentity = damagesource.getDirectEntity();
-
-		RotEntityIsHurtProcedure.execute(world, x, y, z, entity);
-		if (damagesource.is(DamageTypes.IN_FIRE))
-			return false;
-		if (damagesource.getDirectEntity() instanceof AbstractArrow)
-			return false;
 		if (damagesource.is(DamageTypes.FALL))
 			return false;
-		if (damagesource.is(DamageTypes.EXPLOSION) || damagesource.is(DamageTypes.PLAYER_EXPLOSION))
-			return false;
 		return super.hurt(damagesource, amount);
-	}
-
-	@Override
-	public boolean ignoreExplosion(Explosion explosion) {
-		return true;
 	}
 
 	@Override
@@ -162,8 +138,9 @@ public class RotEntity extends Monster {
 		compound.putInt("DatamineX", this.entityData.get(DATA_mineX));
 		compound.putInt("DatamineY", this.entityData.get(DATA_mineY));
 		compound.putInt("DatamineZ", this.entityData.get(DATA_mineZ));
-		compound.putInt("DataanimationTimer", this.entityData.get(DATA_animationTimer));
-		compound.putInt("DatasonicCooldown", this.entityData.get(DATA_sonicCooldown));
+		compound.putInt("Datasentinel_solar_charge_ticks", this.entityData.get(DATA_sentinel_solar_charge_ticks));
+		compound.putInt("Datasentinel_cryo_charge_ticks", this.entityData.get(DATA_sentinel_cryo_charge_ticks));
+		compound.putBoolean("Datais_laser_firing", this.entityData.get(DATA_is_laser_firing));
 	}
 
 	@Override
@@ -177,10 +154,12 @@ public class RotEntity extends Monster {
 			this.entityData.set(DATA_mineY, compound.getInt("DatamineY"));
 		if (compound.contains("DatamineZ"))
 			this.entityData.set(DATA_mineZ, compound.getInt("DatamineZ"));
-		if (compound.contains("DataanimationTimer"))
-			this.entityData.set(DATA_animationTimer, compound.getInt("DataanimationTimer"));
-		if (compound.contains("DatasonicCooldown"))
-			this.entityData.set(DATA_sonicCooldown, compound.getInt("DatasonicCooldown"));
+		if (compound.contains("Datasentinel_solar_charge_ticks"))
+			this.entityData.set(DATA_sentinel_solar_charge_ticks, compound.getInt("Datasentinel_solar_charge_ticks"));
+		if (compound.contains("Datasentinel_cryo_charge_ticks"))
+			this.entityData.set(DATA_sentinel_cryo_charge_ticks, compound.getInt("Datasentinel_cryo_charge_ticks"));
+		if (compound.contains("Datais_laser_firing"))
+			this.entityData.set(DATA_is_laser_firing, compound.getBoolean("Datais_laser_firing"));
 	}
 
 	@Override
@@ -211,7 +190,7 @@ public class RotEntity extends Monster {
 
 	@Override
 	public EntityDimensions getDefaultDimensions(Pose pose) {
-		return super.getDefaultDimensions(pose).scale(1.2f);
+		return super.getDefaultDimensions(pose).scale(1.25f);
 	}
 
 	public static void init(RegisterSpawnPlacementsEvent event) {

@@ -35,11 +35,11 @@ public class RecoveredFadedSwordToolInInventoryTickProcedure {
 				if (!world.isClientSide()) {
 					if ((entity.level().dimension()) == ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse("the_backwoods:loss"))) {
 						if (world.getLevelData().getGameTime() % 100 == 0) {
-							itemstack.setDamageValue((int) Math.min(999999, Math.max(itemstack.getDamageValue() - 1, 0)));
+							itemstack.setDamageValue(itemstack.getDamageValue() - 1);
 						}
 					} else {
 						if (world.getLevelData().getGameTime() % 300 == 0) {
-							itemstack.setDamageValue((int) Math.min(999999, Math.max(itemstack.getDamageValue() - 2, 0)));
+							itemstack.setDamageValue(itemstack.getDamageValue() - 2);
 						}
 					}
 				}

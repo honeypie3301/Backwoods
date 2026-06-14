@@ -141,6 +141,13 @@ public class TheBackwoodsModItems {
 	public static final DeferredItem<Item> SCANDERE_LIGNUM;
 	public static final DeferredItem<Item> SCANDERE_LIGNUM_LOG;
 	public static final DeferredItem<Item> LIGNUM_GIGAS_SPAWN_EGG;
+	public static final DeferredItem<Item> FALSE_OAK_PLANKS;
+	public static final DeferredItem<Item> LIGNUM_VERMIS_SPAWN_EGG;
+	public static final DeferredItem<Item> FRACTUS_SPAWN_EGG;
+	public static final DeferredItem<Item> FRACTUS_PRIME_SPAWN_EGG;
+	public static final DeferredItem<Item> LIGNUM_PALUS_SPAWN_EGG;
+	public static final DeferredItem<Item> FRACTUS_CORE;
+	public static final DeferredItem<Item> FRACTUS_CORE_NUGGET;
 	static {
 		BACKWOODS = REGISTRY.register("backwoods", BackwoodsItem::new);
 		SPLINTER_SPAWN_EGG = REGISTRY.register("splinter_spawn_egg", () -> new DeferredSpawnEggItem(TheBackwoodsModEntities.SPLINTER, -7643606, -3632054, new Item.Properties()));
@@ -264,6 +271,13 @@ public class TheBackwoodsModItems {
 		SCANDERE_LIGNUM = block(TheBackwoodsModBlocks.SCANDERE_LIGNUM);
 		SCANDERE_LIGNUM_LOG = block(TheBackwoodsModBlocks.SCANDERE_LIGNUM_LOG);
 		LIGNUM_GIGAS_SPAWN_EGG = REGISTRY.register("lignum_gigas_spawn_egg", () -> new DeferredSpawnEggItem(TheBackwoodsModEntities.LIGNUM_GIGAS, -3632054, -7643606, new Item.Properties()));
+		FALSE_OAK_PLANKS = block(TheBackwoodsModBlocks.FALSE_OAK_PLANKS);
+		LIGNUM_VERMIS_SPAWN_EGG = REGISTRY.register("lignum_vermis_spawn_egg", () -> new DeferredSpawnEggItem(TheBackwoodsModEntities.LIGNUM_VERMIS, -8366813, -10592674, new Item.Properties()));
+		FRACTUS_SPAWN_EGG = REGISTRY.register("fractus_spawn_egg", () -> new DeferredSpawnEggItem(TheBackwoodsModEntities.FRACTUS, -9021396, -8224126, new Item.Properties()));
+		FRACTUS_PRIME_SPAWN_EGG = REGISTRY.register("fractus_prime_spawn_egg", () -> new DeferredSpawnEggItem(TheBackwoodsModEntities.FRACTUS_PRIME, -9021396, -9568256, new Item.Properties()));
+		LIGNUM_PALUS_SPAWN_EGG = REGISTRY.register("lignum_palus_spawn_egg", () -> new DeferredSpawnEggItem(TheBackwoodsModEntities.LIGNUM_PALUS, -9021396, -14211289, new Item.Properties()));
+		FRACTUS_CORE = block(TheBackwoodsModBlocks.FRACTUS_CORE, new Item.Properties().stacksTo(1).rarity(Rarity.RARE));
+		FRACTUS_CORE_NUGGET = REGISTRY.register("fractus_core_nugget", FractusCoreNuggetItem::new);
 	}
 
 	// Start of user code block custom items

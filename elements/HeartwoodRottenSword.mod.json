@@ -1,5 +1,5 @@
 {
-  "_fv": 79,
+  "_fv": 85,
   "_type": "tool",
   "definition": {
     "toolType": "Sword",
@@ -10,6 +10,7 @@
     "blockingModelName": "Normal blocking",
     "guiTexture": "",
     "name": "Rotten Heartwood Sword",
+    "rarity": "COMMON",
     "specialInformation": {
       "fixedValue": [
         "§8It feels warmer than it should."
@@ -36,6 +37,7 @@
     "immuneToFire": false,
     "blockDropsTier": "IRON",
     "blocksAffected": [],
+    "attributeModifiers": [],
     "stayInGridWhenCrafting": false,
     "damageOnCrafting": false,
     "onEntityHitWith": {

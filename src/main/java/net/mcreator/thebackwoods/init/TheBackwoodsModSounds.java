@@ -30,7 +30,6 @@ public class TheBackwoodsModSounds {
 	public static final DeferredHolder<SoundEvent, SoundEvent> STILL_MOOD3 = REGISTRY.register("still_mood3", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "still_mood3")));
 	public static final DeferredHolder<SoundEvent, SoundEvent> STILL_AMBIENT = REGISTRY.register("still_ambient", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "still_ambient")));
 	public static final DeferredHolder<SoundEvent, SoundEvent> STILL_AMBIENT2 = REGISTRY.register("still_ambient2", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "still_ambient2")));
-	public static final DeferredHolder<SoundEvent, SoundEvent> DEGRADATION_R1 = REGISTRY.register("degradation_r1", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "degradation_r1")));
 	public static final DeferredHolder<SoundEvent, SoundEvent> DEGRADATION_O1 = REGISTRY.register("degradation_o1", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "degradation_o1")));
 	public static final DeferredHolder<SoundEvent, SoundEvent> WHISPER1 = REGISTRY.register("whisper1", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "whisper1")));
 	public static final DeferredHolder<SoundEvent, SoundEvent> WHISPER2 = REGISTRY.register("whisper2", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "whisper2")));
@@ -60,4 +59,20 @@ public class TheBackwoodsModSounds {
 	public static final DeferredHolder<SoundEvent, SoundEvent> FAMILIAR_MOOD5 = REGISTRY.register("familiar_mood5", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "familiar_mood5")));
 	public static final DeferredHolder<SoundEvent, SoundEvent> FAMILIAR_MOOD6 = REGISTRY.register("familiar_mood6", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "familiar_mood6")));
 	public static final DeferredHolder<SoundEvent, SoundEvent> FAMILIAR_MOOD7 = REGISTRY.register("familiar_mood7", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "familiar_mood7")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> VERMIS_IDLE = REGISTRY.register("vermis_idle", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "vermis_idle")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> VERMIS_HURT = REGISTRY.register("vermis_hurt", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "vermis_hurt")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> VERMIS_STEP = REGISTRY.register("vermis_step", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "vermis_step")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> VERMIS_DEATH = REGISTRY.register("vermis_death", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "vermis_death")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> GIGAS_HURT = REGISTRY.register("gigas_hurt", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "gigas_hurt")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> GIGAS_DEATH = REGISTRY.register("gigas_death", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "gigas_death")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> FRACTUS_IDLE = REGISTRY.register("fractus_idle", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "fractus_idle")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> FRACTUS_DEATH = REGISTRY.register("fractus_death", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "fractus_death")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> FRACTUS_HURT = REGISTRY.register("fractus_hurt", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "fractus_hurt")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> FRACTUS_LASER = REGISTRY.register("fractus_laser", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "fractus_laser")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> FRACTUS_ANGER = REGISTRY.register("fractus_anger", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "fractus_anger")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> FRACTUS_LASER_BURST = REGISTRY.register("fractus_laser_burst", () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "fractus_laser_burst")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> FRACTUS_PRIME_LASER_BURST = REGISTRY.register("fractus_prime_laser_burst",
+			() -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "fractus_prime_laser_burst")));
+	public static final DeferredHolder<SoundEvent, SoundEvent> FRACTUS_PRIME_LASER_SPHERE_BURST = REGISTRY.register("fractus_prime_laser_sphere_burst",
+			() -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("the_backwoods", "fractus_prime_laser_sphere_burst")));
 }

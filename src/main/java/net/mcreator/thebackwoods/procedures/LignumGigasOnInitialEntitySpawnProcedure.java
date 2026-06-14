@@ -1,5 +1,6 @@
 package net.mcreator.thebackwoods.procedures;
 
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.effect.MobEffects;
@@ -17,5 +18,7 @@ public class LignumGigasOnInitialEntitySpawnProcedure {
 			_datEntSetI.getEntityData().set(LignumGigasEntity.DATA_hit_stage, 0);
 		if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
 			_entity.addEffect(new MobEffectInstance(MobEffects.REGENERATION, (int) Double.POSITIVE_INFINITY, 7, true, false));
+		if (entity instanceof LivingEntity _livingEntity3 && _livingEntity3.getAttributes().hasAttribute(Attributes.WATER_MOVEMENT_EFFICIENCY))
+			_livingEntity3.getAttribute(Attributes.WATER_MOVEMENT_EFFICIENCY).setBaseValue(1);
 	}
 }
